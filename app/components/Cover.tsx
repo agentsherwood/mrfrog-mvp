@@ -171,6 +171,12 @@ export default function Cover() {
         <Link href="/videos" className="paper-card tilt-l rounded-xl px-4 py-2 text-ink hover:text-sky">
           Videos
         </Link>
+        <Link
+          href="/game"
+          className="paper-card tilt-r rounded-xl px-4 py-2 text-ink hover:text-red"
+        >
+          Play the game &nbsp;&#9656;
+        </Link>
       </nav>
     </section>
   );
