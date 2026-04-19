@@ -13,7 +13,7 @@ export default function DrawingsPage() {
       <PageNav />
       <Originals />
       <footer className="px-6 py-6 text-center text-xs text-pencil">
-        <p>Drawings by Amelia Harrington, age 11.</p>
+        <p>Drawings by Amelia, age 12.</p>
       </footer>
     </main>
   );

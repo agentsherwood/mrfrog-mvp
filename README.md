@@ -1,6 +1,6 @@
 # mrfrog-mvp
 
-Single-repo birthday site for Amelia Harrington (12 on 2026-04-19) — Next.js 16 App Router, TypeScript strict, Tailwind v4, Phaser 3 game at `/game`. No backend, no database, no auth. Deployed to Vercel.
+Single-repo birthday site for Amelia (12 on 2026-04-19) — Next.js 16 App Router, TypeScript strict, Tailwind v4, Phaser 3 game at `/game`. No backend, no database, no auth. Deployed to Vercel.
 
 As of 2026-04-19 this is **the only MrFrog repo** — the old `mr-frog` asset library, standalone `mrfrog-waterfall-jump` game, and `mrfrog-creator` HTML experiment have all been folded in (see task 1849).
 
