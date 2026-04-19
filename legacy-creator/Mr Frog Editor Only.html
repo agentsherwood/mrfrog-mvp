@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mr. Frog — Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Shadows+Into+Light&family=Gloria+Hallelujah&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fdf6e3;
+    --paper-warm: #f4e8c8;
+    --ink: #1a3a5c;
+    --ink-soft: #2d4a6b;
+    --pencil: #3a3a3a;
+    --red-margin: #d94c4c;
+    --rule: #a8c4e0;
+    --wash-green: #9cc38a;
+    --wash-pink: #f2b3b3;
+    --wash-yellow: #f2dc7e;
+    --wash-purple: #c8a8d4;
+    --wash-blue: #a8c4e0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+
+  body {
+    background: #2a241c;
+    font-family: 'Caveat', cursive;
+    color: var(--ink);
+  }
+
+  .app {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, #3d3528 0%, #1c1812 100%);
+    padding: 20px;
+  }
+  .app::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 6px);
+    pointer-events: none;
+  }
+
+  .page-stage {
+    position: relative;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+
+  .page {
+    position: relative;
+    width: 100%; height: 100%;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.6),
+      0 10px 30px -10px rgba(0,0,0,0.4),
+      inset 0 0 80px rgba(120,90,40,0.08);
+    overflow: hidden;
+  }
+
+  .page::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.42  0 0 0 0 0.2  0 0 0 0.1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .page::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(255,240,200,0.5), transparent 60%),
+      radial-gradient(ellipse at 90% 100%, rgba(210,170,110,0.18), transparent 55%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .page .seam {
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 44px;
+    transform: translateX(-50%);
+    z-index: 6;
+    pointer-events: none;
+    background:
+      linear-gradient(to right,
+        transparent 0%,
+        rgba(0,0,0,0.12) 35%,
+        rgba(0,0,0,0.22) 50%,
+        rgba(0,0,0,0.12) 65%,
+        transparent 100%),
+      radial-gradient(ellipse at center, rgba(60,40,20,0.08), transparent 70%);
+  }
+  .page .seam::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(60,40,20,0.35);
+    transform: translateX(-50%);
+  }
+  .page .seam::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 10px,
+      rgba(60,40,20,0.18) 10px 14px,
+      transparent 14px 22px);
+    opacity: 0.55;
+  }
+
+  .spread {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    z-index: 4;
+  }
+  .half {
+    position: relative;
+    overflow: hidden;
+  }
+  .half.left  { padding: 48px 56px 48px 96px; }
+  .half.right { padding: 48px 96px 48px 56px; }
+
+  .half.left  .margin-line-h {
+    position: absolute;
+    left: 80px; top: 0; bottom: 0;
+    width: 1.5px;
+    background: var(--red-margin);
+    opacity: 0.5;
+    z-index: 1;
+  }
+  .half.right .margin-line-h {
+    position: absolute;
+    right: 80px; top: 0; bottom: 0;
+    width: 1.5px;
+    background: var(--red-margin);
+    opacity: 0.5;
+    z-index: 1;
+  }
+
+  .half .holes-h {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 30px;
+    display: flex; flex-direction: column; justify-content: space-around;
+    padding: 50px 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .half.left  .holes-h { left: 22px; }
+  .half.right .holes-h { right: 22px; }
+  .half .holes-h .hole {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #1a1812, #000);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.35);
+  }
+
+  .page.ruled .half::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(to bottom, transparent 0 32px, var(--rule) 32px 33px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-num-h {
+    position: absolute;
+    top: 22px;
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--pencil);
+    transform: rotate(-4deg);
+    z-index: 5; opacity: 0.65;
+  }
+  .half.left  .page-num-h { left: 30px; }
+  .half.right .page-num-h { right: 30px; transform: rotate(3deg); }
+
+  .date-stamp-h {
+    position: absolute;
+    top: 22px;
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--pencil);
+    opacity: 0.7;
+    z-index: 5;
+    max-width: 40%;
+  }
+  .half.left .date-stamp-h  { right: 20px; transform: rotate(3deg); text-align: right; }
+  .half.right .date-stamp-h { left: 20px;  transform: rotate(-2deg); }
+
+  .half-inner {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+  }
+
+  .page.ruled {
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 32px, var(--rule) 32px 33px),
+      var(--paper);
+  }
+
+  .corner-curl {
+    position: absolute; bottom: 0; right: 0;
+    width: 46px; height: 46px;
+    background: linear-gradient(135deg, transparent 50%, rgba(180,150,100,0.3) 52%, rgba(120,95,55,0.35) 100%);
+    border-bottom-right-radius: 14px;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .page-title {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 32px;
+    color: var(--ink);
+    margin: 0 0 2px;
+    line-height: 1;
+    transform: rotate(-1deg);
+    display: inline-block;
+    max-width: 75%;
+  }
+  .page-subtitle {
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    color: var(--pencil);
+    margin: 0;
+    transform: rotate(0.3deg);
+    display: block;
+  }
+
+  .title-scribble svg { width: 300px; height: 10px; display: block; margin-top: -2px; }
+
+  /* ================== FROGS LIST (left half) ================== */
+  .frogs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 10px 12px;
+    flex: 1;
+    min-height: 0;
+    margin-top: 10px;
+  }
+  .frog-card {
+    position: relative;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fff7e0;
+    padding: 6px 6px 28px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 3px 4px 0 rgba(26,58,92,0.12);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    overflow: hidden;
+    min-height: 0;
+    cursor: pointer;
+  }
+  .frog-card:nth-child(odd)  { transform: rotate(-0.8deg); }
+  .frog-card:nth-child(even) { transform: rotate(0.6deg); }
+  .frog-card:hover {
+    transform: rotate(0deg) scale(1.03) !important;
+    box-shadow: 5px 7px 0 rgba(26,58,92,0.22);
+    z-index: 5;
+  }
+  .frog-card.selected {
+    background: var(--wash-yellow);
+    border-color: var(--red-margin);
+    box-shadow: 4px 5px 0 rgba(217,76,76,0.35);
+    transform: rotate(0deg) !important;
+  }
+  .frog-card.selected::after {
+    content: "✎";
+    position: absolute;
+    top: 3px; right: 6px;
+    color: var(--red-margin);
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 18px;
+  }
+  .frog-card svg { width: 100%; height: 100%; display: block; max-height: calc(100% - 4px); }
+  .frog-card-label {
+    position: absolute;
+    bottom: 4px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 17px; line-height: 1.05;
+    color: var(--ink);
+  }
+  .frog-card-label small {
+    display: block;
+    font-size: 12px;
+    color: var(--pencil);
+    opacity: 0.8;
+  }
+
+  /* ================== EDITOR (right half) ================== */
+  .editor-col {
+    display: flex; flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    gap: 10px;
+  }
+  .editor-header {
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .edit-preview {
+    flex-shrink: 0;
+    width: 150px; height: 150px;
+    border: 2.5px dashed var(--ink);
+    border-radius: 10px;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(156,195,138,0.35), transparent 60%),
+      #fff7e0;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 3px 3px 0 rgba(26,58,92,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .edit-preview::before {
+    content: "preview ✎";
+    position: absolute;
+    top: 4px; left: 8px;
+    font-size: 13px;
+    color: var(--pencil);
+    opacity: 0.7;
+    font-family: 'Caveat', cursive;
+  }
+  .edit-preview svg { width: 86%; height: 86%; display: block; }
+
+  .editor-meta {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+  }
+  .name-input {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 28px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px dashed var(--red-margin);
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    padding: 2px 2px;
+  }
+  .name-input:focus { border-bottom-color: var(--ink); background: rgba(242,220,126,0.25); }
+
+  .stars-row {
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--pencil);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .editor-fields {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    min-height: 0;
+  }
+  .editor-fields::-webkit-scrollbar { width: 8px; }
+  .editor-fields::-webkit-scrollbar-thumb { background: rgba(26,58,92,0.3); border-radius: 4px; }
+
+  .field { margin-bottom: 14px; }
+  .field-label {
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+    transform: rotate(-0.5deg);
+  }
+  .field-label .hint {
+    font-size: 15px;
+    color: var(--pencil);
+    opacity: 0.75;
+  }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+  .chip {
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    background: transparent;
+    border: 1.8px solid var(--ink);
+    color: var(--ink);
+    border-radius: 16px 4px 16px 4px;
+    padding: 2px 11px;
+    transition: background 0.15s, transform 0.15s;
+    cursor: pointer;
+  }
+  .chip:hover { background: rgba(242,220,126,0.4); transform: translateY(-1px); }
+  .chip.active {
+    background: var(--wash-yellow);
+    box-shadow: 2px 2px 0 rgba(26,58,92,0.2);
+  }
+  .chip .dot {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .stars-input { display: inline-flex; gap: 2px; }
+  .star-btn {
+    background: transparent; border: none;
+    font-size: 24px;
+    color: rgba(217,76,76,0.25);
+    padding: 0 1px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .star-btn.on { color: var(--red-margin); }
+
+  .textarea-doodle {
+    width: 100%;
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--ink);
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 24px, rgba(168,196,224,0.5) 24px 25px),
+      transparent;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 4px 10px;
+    line-height: 25px;
+    min-height: 76px;
+    resize: vertical;
+    outline: none;
+  }
+  .textarea-doodle:focus { box-shadow: 2px 2px 0 var(--wash-yellow); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <main class="page-stage" id="pageStage"></main>
+</div>
+
+<script>
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function popSound() {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.11);
+  }
+</script>
+
+<script>
+  const OUTFIT_HATS = [
+    { key: 'none',    label: 'no hat' },
+    { key: 'hat',     label: 'cowboy hat' },
+    { key: 'beanie',  label: 'pom beanie' },
+    { key: 'crown',   label: 'gold crown' },
+    { key: 'wizard',  label: 'wizard hat' },
+    { key: 'pirate',  label: 'pirate hat' },
+    { key: 'chef',    label: 'chef hat' }
+  ];
+  const OUTFIT_CLOTHES = [
+    { key: 'none',      label: 'just frog' },
+    { key: 'scarf',     label: 'cozy scarf' },
+    { key: 'bowtie',    label: 'bowtie' },
+    { key: 'raincoat',  label: 'raincoat' },
+    { key: 'superhero', label: 'cape' },
+    { key: 'glasses',   label: 'glasses' }
+  ];
+  const BODY_COLORS = [
+    { key: 'green',  label: 'pond green',   fill: '#b5d49e', dark: '#9cc38a' },
+    { key: 'blue',   label: 'tree blue',    fill: '#a8c4e0', dark: '#8ba8c4' },
+    { key: 'pink',   label: 'flamingo',     fill: '#f2b3b3', dark: '#e09494' },
+    { key: 'yellow', label: 'lemon',        fill: '#f2dc7e', dark: '#d9c45e' },
+    { key: 'purple', label: 'grape',        fill: '#c8a8d4', dark: '#a88ab4' },
+    { key: 'spot',   label: 'spotty',       fill: '#b5d49e', dark: '#7ba05e' }
+  ];
+  const TIMES = [
+    { key: 'morning', label: 'morning ☀' },
+    { key: 'noon',    label: 'noon' },
+    { key: 'evening', label: 'evening 🌆' },
+    { key: 'night',   label: 'night 🌙' }
+  ];
+  const MOODS = [
+    { key: 'happy',   label: 'happy' },
+    { key: 'sleepy',  label: 'sleepy' },
+    { key: 'grumpy',  label: 'grumpy' },
+    { key: 'silly',   label: 'silly' },
+    { key: 'shy',     label: 'shy' },
+    { key: 'hungry',  label: 'hungry' }
+  ];
+  const LIKES = ['flies', 'rain', 'books', 'naps', 'tea', 'songs', 'swimming', 'dancing', 'snails', 'pie'];
+
+  const DEFAULT_FROGS = [
+    { id: 1, name: 'Mr. Frog',   bodyColor: 'green',  hat: 'none',   clothes: 'glasses',   time: 'morning', mood: 'happy',  likes: ['books', 'tea'],       stars: 5, notes: 'the boss of the pond.' },
+    { id: 2, name: 'Hoppy',      bodyColor: 'yellow', hat: 'beanie', clothes: 'scarf',     time: 'evening', mood: 'sleepy', likes: ['naps', 'songs'],      stars: 4, notes: 'always listening to music.' },
+    { id: 3, name: 'Sir Ribbit', bodyColor: 'purple', hat: 'crown',  clothes: 'bowtie',    time: 'noon',    mood: 'silly',  likes: ['dancing', 'pie'],     stars: 5, notes: 'wants to be king of the swamp.' },
+    { id: 4, name: 'Croaksworth',bodyColor: 'blue',   hat: 'wizard', clothes: 'raincoat',  time: 'night',   mood: 'grumpy', likes: ['rain', 'snails'],     stars: 4, notes: 'knows every spell (he says).' },
+    { id: 5, name: 'Doodle',     bodyColor: 'pink',   hat: 'chef',   clothes: 'none',      time: 'morning', mood: 'hungry', likes: ['pie', 'flies'],       stars: 3, notes: 'makes the best fly pancakes.' },
+    { id: 6, name: 'Biff',       bodyColor: 'spot',   hat: 'pirate', clothes: 'superhero', time: 'evening', mood: 'shy',    likes: ['swimming', 'books'],  stars: 4, notes: 'tiny adventurer. scared of bees.' },
+    { id: 7, name: 'Mossy',      bodyColor: 'green',  hat: 'chef',   clothes: 'scarf',     time: 'morning', mood: 'happy',  likes: ['moss', 'stew'],       stars: 4, notes: 'bakes with swamp ingredients.' },
+    { id: 8, name: 'Lily',       bodyColor: 'pink',   hat: 'beanie', clothes: 'bowtie',    time: 'noon',    mood: 'silly',  likes: ['singing', 'bugs'],    stars: 5, notes: 'loudest frog in the pond.' }
+  ];
+
+  function loadFrogs() {
+    try {
+      const raw = localStorage.getItem('mrfrog_frogs_v2');
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_FROGS));
+  }
+  function saveFrogs() {
+    try { localStorage.setItem('mrfrog_frogs_v2', JSON.stringify(state.frogs)); } catch(e) {}
+  }
+
+  const state = {
+    editingId: 1,
+    frogs: loadFrogs()
+  };
+
+  function getFrog(id) { return state.frogs.find(f => f.id === id); }
+</script>
+
+<script>
+function frogMouth(mood) {
+  switch (mood) {
+    case 'sleepy': return `<path d="M 115 165 Q 150 175 185 165" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>`;
+    case 'grumpy': return `<path d="M 115 170 Q 150 150 185 170" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>`;
+    case 'silly':  return `<path d="M 110 160 Q 150 200 190 160" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+                          <path d="M 130 180 L 138 195 L 150 180 L 162 195 L 170 180" stroke="#d94c4c" stroke-width="2" fill="none"/>`;
+    case 'shy':    return `<ellipse cx="150" cy="168" rx="14" ry="5" fill="none" stroke="#1a3a5c" stroke-width="2.5"/>`;
+    case 'hungry': return `<ellipse cx="150" cy="172" rx="22" ry="14" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+                          <path d="M 130 168 L 170 168" stroke="#1a3a5c" stroke-width="1.5"/>`;
+    default:       return `<path d="M 115 165 Q 150 190 185 165" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+                          <path d="M 140 177 Q 150 182 160 177" fill="#d94c4c" stroke="#1a3a5c" stroke-width="1.5"/>`;
+  }
+}
+
+function frogEyes(mood) {
+  if (mood === 'sleepy') {
+    return `<path d="M 106 100 Q 118 108 130 100" stroke="#1a3a5c" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M 170 100 Q 182 108 194 100" stroke="#1a3a5c" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  }
+  if (mood === 'grumpy') {
+    return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="122" cy="104" r="9" fill="#1a3a5c"/>
+            <circle cx="186" cy="104" r="9" fill="#1a3a5c"/>
+            <path d="M 96 82 L 132 92" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 204 82 L 168 92" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  if (mood === 'silly') {
+    return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <path d="M 110 108 L 126 92" stroke="#1a3a5c" stroke-width="3"/>
+            <path d="M 126 108 L 110 92" stroke="#1a3a5c" stroke-width="3"/>
+            <circle cx="186" cy="104" r="9" fill="#1a3a5c"/>
+            <circle cx="189" cy="101" r="3" fill="#fffbe8"/>`;
+  }
+  if (mood === 'shy') {
+    return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="120" cy="106" r="7" fill="#1a3a5c"/>
+            <circle cx="184" cy="106" r="7" fill="#1a3a5c"/>`;
+  }
+  return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+          <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+          <circle cx="122" cy="104" r="9" fill="#1a3a5c"/>
+          <circle cx="186" cy="104" r="9" fill="#1a3a5c"/>
+          <circle cx="125" cy="101" r="3" fill="#fffbe8"/>
+          <circle cx="189" cy="101" r="3" fill="#fffbe8"/>`;
+}
+
+function bodyPalette(bodyColor) {
+  const found = BODY_COLORS.find(b => b.key === bodyColor) || BODY_COLORS[0];
+  return found;
+}
+
+function hatSVG(hat) {
+  switch(hat) {
+    case 'hat': return `
+      <ellipse cx="150" cy="62" rx="70" ry="8" fill="#6b4423" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 100 62 Q 95 22 150 20 Q 205 22 200 62 Z" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2.5"/>
+      <rect x="100" y="55" width="100" height="8" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>`;
+    case 'beanie': return `
+      <path d="M 95 95 Q 90 45 150 40 Q 210 45 205 95 Q 200 85 150 83 Q 100 85 95 95 Z" fill="#c8a8d4" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="150" cy="32" r="14" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5"/>
+      <line x1="150" y1="20" x2="150" y2="44" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="140" y1="24" x2="160" y2="40" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="160" y1="24" x2="140" y2="40" stroke="#1a3a5c" stroke-width="1"/>`;
+    case 'crown': return `
+      <path d="M 105 85 L 115 45 L 135 70 L 150 35 L 165 70 L 185 45 L 195 85 Z" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="115" cy="50" r="4" fill="#d94c4c" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="150" cy="42" r="5" fill="#9cc38a" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="185" cy="50" r="4" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="1.5"/>`;
+    case 'wizard': return `
+      <path d="M 90 90 L 150 0 L 210 90 Z" fill="#7a5fa8" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="125,55 135,48 138,60 128,62" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="1"/>
+      <polygon points="160,35 170,30 173,42 163,44" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="1"/>
+      <circle cx="150" cy="15" r="4" fill="#f2dc7e"/>`;
+    case 'pirate': return `
+      <path d="M 90 88 Q 80 55 150 48 Q 220 55 210 88 L 90 88 Z" fill="#1a1a1a" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 100 75 L 135 65 L 118 48 Z" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2"/>
+      <circle cx="125" cy="63" r="3" fill="#1a1a1a"/>
+      <line x1="122" y1="60" x2="128" y2="66" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="128" y1="60" x2="122" y2="66" stroke="#1a1a1a" stroke-width="1.5"/>`;
+    case 'chef': return `
+      <path d="M 95 88 Q 80 55 110 40 Q 125 20 150 25 Q 175 20 190 40 Q 220 55 205 88 Z" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <rect x="90" y="80" width="120" height="14" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="115" cy="55" r="11" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="150" cy="40" r="13" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="185" cy="55" r="11" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>`;
+    default: return '';
+  }
+}
+
+function clothesSVG(clothes) {
+  switch(clothes) {
+    case 'scarf': return `
+      <path d="M 80 215 Q 150 205 220 215 L 225 245 Q 150 238 75 245 Z" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 90 240 L 85 275 L 105 272 L 110 238 Z" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2.5"/>
+      <line x1="90" y1="220" x2="95" y2="245" stroke="#1a3a5c" stroke-width="1" opacity="0.5"/>
+      <line x1="180" y1="220" x2="185" y2="245" stroke="#1a3a5c" stroke-width="1" opacity="0.5"/>`;
+    case 'bowtie': return `
+      <path d="M 125 205 L 108 192 L 108 222 L 125 212 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>
+      <path d="M 175 205 L 192 192 L 192 222 L 175 212 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>
+      <rect x="140" y="200" width="20" height="16" rx="3" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>`;
+    case 'raincoat': return `
+      <path d="M 55 195 Q 45 280 62 295 L 238 295 Q 255 280 245 195 Q 205 208 150 208 Q 95 208 55 195 Z" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="115" cy="235" r="4" fill="#1a3a5c"/>
+      <circle cx="115" cy="255" r="4" fill="#1a3a5c"/>
+      <circle cx="115" cy="275" r="4" fill="#1a3a5c"/>`;
+    case 'superhero': return `
+      <path d="M 40 195 Q 10 250 40 290 Q 60 265 62 220 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 260 195 Q 290 250 260 290 Q 240 265 238 220 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+      <rect x="120" y="200" width="60" height="22" rx="4" fill="#1a3a5c" stroke="#1a3a5c" stroke-width="2"/>
+      <path d="M 140 206 L 148 215 L 160 200" stroke="#f2dc7e" stroke-width="3" fill="none"/>`;
+    case 'glasses': return `
+      <circle cx="118" cy="104" r="22" fill="none" stroke="#1a3a5c" stroke-width="3"/>
+      <circle cx="182" cy="104" r="22" fill="none" stroke="#1a3a5c" stroke-width="3"/>
+      <line x1="140" y1="104" x2="160" y2="104" stroke="#1a3a5c" stroke-width="3"/>
+      <circle cx="118" cy="104" r="22" fill="#a8c4e0" opacity="0.22"/>
+      <circle cx="182" cy="104" r="22" fill="#a8c4e0" opacity="0.22"/>`;
+    default: return '';
+  }
+}
+
+function frogSVG(frog, opts = {}) {
+  const { size = 260 } = opts;
+  const pal = bodyPalette(frog.bodyColor);
+  const spots = frog.bodyColor === 'spot' ? `
+    <circle cx="80" cy="160" r="10" fill="${pal.dark}"/>
+    <circle cx="200" cy="150" r="14" fill="${pal.dark}"/>
+    <circle cx="150" cy="240" r="8" fill="${pal.dark}"/>
+    <circle cx="105" cy="220" r="6" fill="${pal.dark}"/>
+    <circle cx="220" cy="210" r="7" fill="${pal.dark}"/>
+  ` : '';
+
+  return `
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet">
+  <path d="M 60 185 Q 55 115 150 105 Q 245 115 240 185 Q 245 260 150 265 Q 55 260 60 185 Z"
+    fill="${pal.fill}" stroke="#1a3a5c" stroke-width="3" stroke-linejoin="round"/>
+  ${spots}
+  <ellipse cx="150" cy="210" rx="55" ry="45" fill="#f4e8c8" stroke="#1a3a5c" stroke-width="2" opacity="0.85"/>
+  <ellipse cx="88" cy="265" rx="28" ry="12" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <ellipse cx="212" cy="265" rx="28" ry="12" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <circle cx="75" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="88" cy="270" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="101" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="199" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="212" cy="270" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="225" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <path d="M 68 190 Q 45 200 50 230" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 232 190 Q 255 200 250 230" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="50" cy="232" r="10" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <circle cx="250" cy="232" r="10" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <circle cx="118" cy="95" r="28" fill="${pal.fill}" stroke="#1a3a5c" stroke-width="3"/>
+  <circle cx="182" cy="95" r="28" fill="${pal.fill}" stroke="#1a3a5c" stroke-width="3"/>
+  ${frogEyes(frog.mood)}
+  <ellipse cx="90" cy="155" rx="14" ry="8" fill="#f2b3b3" opacity="0.7"/>
+  <ellipse cx="210" cy="155" rx="14" ry="8" fill="#f2b3b3" opacity="0.7"/>
+  ${frogMouth(frog.mood)}
+  ${clothesSVG(frog.clothes)}
+  ${hatSVG(frog.hat)}
+</svg>`;
+}
+
+function titleScribble() {
+  return `<span class="title-scribble"><svg viewBox="0 0 300 10" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 5 6 Q 50 2 100 5 T 200 7 T 298 4" fill="none" stroke="#1a3a5c" stroke-width="2" stroke-linecap="round"/>
+  </svg></span>`;
+}
+</script>
+
+<script>
+function renderSpread() {
+  const card = (f) => `
+    <div class="frog-card ${f.id === state.editingId ? 'selected' : ''}" data-frog-id="${f.id}" tabindex="0">
+      ${frogSVG(f, { size: 90 })}
+      <div class="frog-card-label">
+        ${escapeHtml(f.name)}
+        <small>${moodLabel(f.mood)}</small>
+      </div>
+    </div>
+  `;
+
+  const frog = getFrog(state.editingId) || state.frogs[0];
+
+  return `
+    <div class="page ruled">
+      <div class="seam"></div>
+
+      <div class="spread">
+        <!-- LEFT: frogs list -->
+        <div class="half left">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 5</div>
+          <div class="date-stamp-h">~ my frog friends</div>
+
+          <div class="half-inner">
+            <h2 class="page-title">My Frogs 🐸</h2>
+            ${titleScribble()}
+            <p class="page-subtitle">pick one to edit →</p>
+
+            <div class="frogs-grid" id="frogsGrid">
+              ${state.frogs.map(card).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: editor -->
+        <div class="half right">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 6</div>
+          <div class="date-stamp-h">~ fixing up a frog</div>
+
+          <div class="half-inner">
+            <h2 class="page-title" style="transform:rotate(1deg);">Frog Profile ✎</h2>
+            ${titleScribble()}
+
+            <div class="editor-col">
+              <div class="editor-header">
+                <div class="edit-preview" id="editPreview">
+                  ${frogSVG(frog, { size: 130 })}
+                </div>
+                <div class="editor-meta">
+                  <input class="name-input" id="nameInput" value="${escapeHtml(frog.name)}" maxlength="20"/>
+                  <div class="stars-row">
+                    ⭐ friendship:
+                    <span class="stars-input" id="starsInput">
+                      ${[1,2,3,4,5].map(n => `<button class="star-btn ${n <= frog.stars ? 'on' : ''}" data-star="${n}">★</button>`).join('')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="editor-fields" id="editFields">
+                ${field('body color', BODY_COLORS.map(c => `
+                  <button class="chip ${frog.bodyColor === c.key ? 'active' : ''}" data-field="bodyColor" data-val="${c.key}">
+                    <span class="dot" style="background:${c.fill}"></span>${c.label}
+                  </button>`).join(''))}
+
+                ${field('hat', OUTFIT_HATS.map(h => `
+                  <button class="chip ${frog.hat === h.key ? 'active' : ''}" data-field="hat" data-val="${h.key}">${h.label}</button>`).join(''))}
+
+                ${field('clothes & accessories', OUTFIT_CLOTHES.map(c => `
+                  <button class="chip ${frog.clothes === c.key ? 'active' : ''}" data-field="clothes" data-val="${c.key}">${c.label}</button>`).join(''))}
+
+                ${field('mood', MOODS.map(m => `
+                  <button class="chip ${frog.mood === m.key ? 'active' : ''}" data-field="mood" data-val="${m.key}">${m.label}</button>`).join(''))}
+
+                ${field('favorite time of day', TIMES.map(t => `
+                  <button class="chip ${frog.time === t.key ? 'active' : ''}" data-field="time" data-val="${t.key}">${t.label}</button>`).join(''))}
+
+                ${field('things they like', LIKES.map(l => `
+                  <button class="chip ${frog.likes.includes(l) ? 'active' : ''}" data-field="likes" data-val="${l}" data-multi="1">${l}</button>`).join(''), 'pick as many as you want')}
+
+                <div class="field">
+                  <div class="field-label">notes <span class="hint">anything cool about them</span></div>
+                  <textarea class="textarea-doodle" id="notesInput" rows="3" placeholder="e.g. likes to sing in the rain...">${escapeHtml(frog.notes || '')}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="corner-curl"></div>
+    </div>
+  `;
+}
+
+function field(label, inner, hint) {
+  return `
+    <div class="field">
+      <div class="field-label">${label} ${hint ? `<span class="hint">${hint}</span>` : ''}</div>
+      <div class="chip-row">${inner}</div>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function moodLabel(m) {
+  const f = MOODS.find(x => x.key === m);
+  return f ? f.label : m;
+}
+</script>
+
+<script>
+const pageStage = document.getElementById('pageStage');
+
+function render() {
+  pageStage.innerHTML = renderSpread();
+  attachHandlers();
+}
+
+function selectFrog(id) {
+  if (state.editingId === id) return;
+  state.editingId = id;
+  render();
+}
+
+function attachHandlers() {
+  document.querySelectorAll('.frog-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = parseInt(card.dataset.frogId, 10);
+      popSound();
+      selectFrog(id);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectFrog(parseInt(card.dataset.frogId, 10));
+      }
+    });
+  });
+
+  const frog = getFrog(state.editingId);
+  if (!frog) return;
+
+  document.querySelectorAll('#editFields .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const f = chip.dataset.field;
+      const v = chip.dataset.val;
+      const multi = chip.dataset.multi;
+      if (multi) {
+        const set = new Set(frog.likes);
+        if (set.has(v)) set.delete(v); else set.add(v);
+        frog.likes = Array.from(set);
+        chip.classList.toggle('active');
+      } else {
+        frog[f] = v;
+        document.querySelectorAll(`#editFields .chip[data-field="${f}"]`).forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      }
+      saveFrogs();
+      updatePreviews();
+      popSound();
+    });
+  });
+
+  const nameInput = document.getElementById('nameInput');
+  nameInput.addEventListener('input', () => {
+    frog.name = nameInput.value;
+    saveFrogs();
+    updateCardLabel(frog);
+  });
+
+  const notesInput = document.getElementById('notesInput');
+  notesInput.addEventListener('input', () => {
+    frog.notes = notesInput.value;
+    saveFrogs();
+  });
+
+  document.querySelectorAll('#starsInput .star-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const n = parseInt(btn.dataset.star, 10);
+      frog.stars = n;
+      document.querySelectorAll('#starsInput .star-btn').forEach(b => {
+        const bn = parseInt(b.dataset.star, 10);
+        b.classList.toggle('on', bn <= n);
+      });
+      saveFrogs();
+      popSound();
+    });
+  });
+}
+
+function updatePreviews() {
+  const frog = getFrog(state.editingId);
+  if (!frog) return;
+  document.getElementById('editPreview').innerHTML = frogSVG(frog, { size: 130 });
+  const card = document.querySelector(`.frog-card[data-frog-id="${frog.id}"]`);
+  if (card) {
+    const label = card.querySelector('.frog-card-label');
+    card.innerHTML = frogSVG(frog, { size: 90 }) + (label ? label.outerHTML : '');
+    // update mood small
+    const small = card.querySelector('.frog-card-label small');
+    if (small) small.textContent = moodLabel(frog.mood);
+  }
+}
+
+function updateCardLabel(frog) {
+  const card = document.querySelector(`.frog-card[data-frog-id="${frog.id}"] .frog-card-label`);
+  if (!card) return;
+  card.childNodes[0].nodeValue = frog.name;
+}
+
+render();
+document.addEventListener('click', () => ensureAudio(), { once: true });
+</script>
+
+</body>
+</html>

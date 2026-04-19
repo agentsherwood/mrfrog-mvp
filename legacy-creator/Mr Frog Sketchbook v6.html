@@ -1,0 +1,2455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mr. Frog World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Shadows+Into+Light&family=Gloria+Hallelujah&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fdf6e3;
+    --paper-warm: #f4e8c8;
+    --ink: #1a3a5c;
+    --ink-soft: #2d4a6b;
+    --pencil: #3a3a3a;
+    --red-margin: #d94c4c;
+    --rule: #a8c4e0;
+    --wash-green: #9cc38a;
+    --wash-pink: #f2b3b3;
+    --wash-yellow: #f2dc7e;
+    --wash-purple: #c8a8d4;
+    --wash-blue: #a8c4e0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+
+  body {
+    background: #2a241c;
+    font-family: 'Caveat', cursive;
+    color: var(--ink);
+  }
+
+  /* Stage (app layout) */
+  .app {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    background: radial-gradient(ellipse at center, #3d3528 0%, #1c1812 100%);
+    padding: 20px;
+    gap: 0;
+  }
+
+  .app::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 6px);
+    pointer-events: none;
+  }
+
+  /* ================== SIDEBAR ================== */
+  .sidebar {
+    position: relative;
+    background: var(--paper);
+    padding: 28px 22px 28px 26px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    z-index: 2;
+    border-radius: 4px 0 0 4px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6), 0 10px 30px -10px rgba(0,0,0,0.4);
+  }
+  .sidebar::before {
+    /* Warm wash matching page */
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(255,240,200,0.5), transparent 60%),
+      radial-gradient(ellipse at 0% 100%, rgba(210,170,110,0.18), transparent 55%);
+    pointer-events: none;
+  }
+  .sidebar::after {
+    /* Spiral binding gutter at the seam */
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; right: 0;
+    width: 22px;
+    background:
+      linear-gradient(to right, transparent 0%, rgba(0,0,0,0.08) 60%, rgba(0,0,0,0.18) 100%),
+      repeating-linear-gradient(to bottom, transparent 0 26px, rgba(26,58,92,0.55) 26px 28px, transparent 28px 52px);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .brand {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 2px;
+    transform: rotate(-2deg);
+    position: relative; z-index: 3;
+  }
+  .brand small {
+    display: block;
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--pencil);
+    margin-top: 4px;
+    transform: rotate(1deg);
+  }
+  .brand-rule {
+    border: none;
+    border-top: 1.5px dashed var(--red-margin);
+    margin: 16px 2px 12px 0;
+    position: relative; z-index: 3;
+  }
+
+  .nav-list {
+    display: flex; flex-direction: column;
+    gap: 4px;
+    position: relative; z-index: 3;
+  }
+  .nav-item {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--ink);
+    background: transparent;
+    border: 1.8px solid transparent;
+    border-radius: 14px 4px 16px 4px;
+    padding: 6px 14px 6px 12px;
+    text-align: left;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.15s, transform 0.15s, border-color 0.15s;
+    position: relative;
+    width: 100%;
+  }
+  .nav-item .idx {
+    display: inline-block;
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 14px;
+    color: var(--red-margin);
+    min-width: 18px;
+  }
+  .nav-item:hover {
+    background: rgba(242,220,126,0.5);
+    transform: translateX(2px);
+  }
+  .nav-item.active {
+    background: var(--wash-yellow);
+    border-color: var(--ink);
+    box-shadow: 2px 2px 0 rgba(26,58,92,0.25);
+    transform: translateX(2px);
+  }
+  .nav-item.active::after {
+    content: "✎";
+    margin-left: auto;
+    color: var(--red-margin);
+    font-size: 18px;
+  }
+
+  .nav-divider {
+    border: none;
+    border-top: 1px solid rgba(26,58,92,0.25);
+    margin: 14px 2px 8px 0;
+    position: relative; z-index: 3;
+  }
+  .nav-label {
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    color: var(--pencil);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin: 8px 0 4px 4px;
+    opacity: 0.7;
+    position: relative; z-index: 3;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--pencil);
+    opacity: 0.7;
+    position: relative; z-index: 3;
+    padding-right: 14px;
+  }
+
+  /* Doodle on sidebar */
+  .sidebar-doodle {
+    position: relative;
+    margin: 18px auto 8px;
+    width: 90px;
+    z-index: 3;
+    transform: rotate(-6deg);
+  }
+
+  /* ================== PAGE AREA ================== */
+  .page-stage {
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+
+  .page {
+    position: relative;
+    width: 100%; height: 100%;
+    background: var(--paper);
+    border-radius: 0 14px 14px 0;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.6),
+      0 10px 30px -10px rgba(0,0,0,0.4),
+      inset 0 0 80px rgba(120,90,40,0.08),
+      inset 22px 0 28px -12px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+
+  /* Paper texture */
+  .page::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.42  0 0 0 0 0.2  0 0 0 0.1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Warm wash */
+  .page::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(255,240,200,0.5), transparent 60%),
+      radial-gradient(ellipse at 90% 100%, rgba(210,170,110,0.18), transparent 55%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Central seam / binding — appears on every page */
+  .page .seam {
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 44px;
+    transform: translateX(-50%);
+    z-index: 6;
+    pointer-events: none;
+    background:
+      linear-gradient(to right,
+        transparent 0%,
+        rgba(0,0,0,0.12) 35%,
+        rgba(0,0,0,0.22) 50%,
+        rgba(0,0,0,0.12) 65%,
+        transparent 100%),
+      radial-gradient(ellipse at center, rgba(60,40,20,0.08), transparent 70%);
+  }
+  .page .seam::before {
+    /* The fold line */
+    content: "";
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(60,40,20,0.35);
+    transform: translateX(-50%);
+  }
+  .page .seam::after {
+    /* Faint stitched pattern */
+    content: "";
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 10px,
+      rgba(60,40,20,0.18) 10px 14px,
+      transparent 14px 22px);
+    opacity: 0.55;
+  }
+
+  /* Spread: two halves separated by the seam */
+  .spread {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    z-index: 4;
+  }
+  .half {
+    position: relative;
+    overflow: hidden;
+  }
+  .half.left  { padding: 48px 56px 48px 96px; }
+  .half.right { padding: 48px 96px 48px 56px; }
+
+  /* Full-bleed content that crosses the seam */
+  .spread.single {
+    grid-template-columns: 1fr;
+    padding: 48px 64px;
+  }
+
+  /* Mirrored red margins */
+  .half.left  .margin-line-h {
+    position: absolute;
+    left: 80px; top: 0; bottom: 0;
+    width: 1.5px;
+    background: var(--red-margin);
+    opacity: 0.5;
+    z-index: 1;
+  }
+  .half.right .margin-line-h {
+    position: absolute;
+    right: 80px; top: 0; bottom: 0;
+    width: 1.5px;
+    background: var(--red-margin);
+    opacity: 0.5;
+    z-index: 1;
+  }
+
+  /* Mirrored punch holes */
+  .half .holes-h {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 30px;
+    display: flex; flex-direction: column; justify-content: space-around;
+    padding: 50px 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .half.left  .holes-h { left: 22px; }
+  .half.right .holes-h { right: 22px; }
+  .half .holes-h .hole {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #1a1812, #000);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.35);
+  }
+
+  /* Ruled spread — ruling draws on the halves */
+  .page.ruled .half::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(to bottom, transparent 0 32px, var(--rule) 32px 33px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Page corner markers */
+  .page-num-h {
+    position: absolute;
+    top: 22px;
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--pencil);
+    transform: rotate(-4deg);
+    z-index: 5; opacity: 0.65;
+  }
+  .half.left  .page-num-h { left: 30px; }
+  .half.right .page-num-h { right: 30px; transform: rotate(3deg); }
+
+  .date-stamp-h {
+    position: absolute;
+    top: 22px;
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--pencil);
+    opacity: 0.7;
+    z-index: 5;
+    max-width: 40%;
+  }
+  .half.left .date-stamp-h  { right: 20px; transform: rotate(3deg); text-align: right; }
+  .half.right .date-stamp-h { left: 20px;  transform: rotate(-2deg); }
+
+  /* Inner content shell per half */
+  .half-inner {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+  }
+
+  /* Ruled */
+  .page.ruled {
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 32px, var(--rule) 32px 33px),
+      var(--paper);
+  }
+
+  /* Red margin */
+  .page .margin-line {
+    position: absolute;
+    left: 80px; top: 0; bottom: 0;
+    width: 1.5px;
+    background: var(--red-margin);
+    opacity: 0.55;
+    z-index: 3;
+    box-shadow: 1px 0 0 rgba(217,76,76,0.2);
+  }
+
+  /* Holes */
+  .holes {
+    position: absolute;
+    left: 20px; top: 0; bottom: 0;
+    width: 30px;
+    z-index: 3;
+    display: flex; flex-direction: column; justify-content: space-around;
+    padding: 50px 0;
+    pointer-events: none;
+  }
+  .holes .hole {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #1a1812, #000);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.4);
+  }
+
+  .content {
+    position: absolute;
+    inset: 0;
+    padding: 42px 50px 42px 110px;
+    z-index: 4;
+    overflow: hidden;
+  }
+
+  .page-num {
+    position: absolute;
+    top: 22px; left: 30px;
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--pencil);
+    transform: rotate(-4deg);
+    z-index: 5; opacity: 0.6;
+  }
+  .date-stamp {
+    position: absolute;
+    top: 22px; right: 32px;
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    color: var(--pencil);
+    transform: rotate(3deg);
+    opacity: 0.75;
+    z-index: 5;
+  }
+  .date-stamp::before { content: "~ "; }
+
+  .corner-curl {
+    position: absolute; bottom: 0; right: 0;
+    width: 46px; height: 46px;
+    background: linear-gradient(135deg, transparent 50%, rgba(180,150,100,0.3) 52%, rgba(120,95,55,0.35) 100%);
+    border-bottom-right-radius: 14px;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .page-title {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 32px;
+    color: var(--ink);
+    margin: 0 0 2px;
+    line-height: 1;
+    transform: rotate(-1deg);
+    display: inline-block;
+    max-width: 75%;
+  }
+  .page-subtitle {
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    color: var(--pencil);
+    margin: 0;
+    transform: rotate(0.3deg);
+    display: block;
+  }
+
+  .title-scribble svg { width: 300px; height: 10px; display: block; margin-top: -2px; }
+
+  /* ================== HOME / COVER ================== */
+  .home-wrap {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+    height: 100%;
+    align-items: center;
+  }
+  .home-left {
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 6px;
+  }
+  .kicker {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--pencil);
+    transform: rotate(-2deg);
+  }
+  .home-title {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: clamp(32px, 3.4vw, 48px);
+    color: var(--ink);
+    line-height: 0.98;
+    letter-spacing: -0.5px;
+  }
+  .home-title .amp {
+    color: var(--red-margin);
+    font-family: 'Caveat', cursive;
+    font-size: 0.65em;
+    display: inline-block;
+    transform: rotate(8deg);
+  }
+  .home-title .w1 { display: inline-block; transform: rotate(-2deg); }
+  .home-title .w2 { display: inline-block; transform: rotate(1.5deg); }
+  .home-byline {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--pencil);
+    transform: rotate(-1.5deg);
+    margin-top: 6px;
+  }
+  .home-byline .name {
+    color: var(--ink);
+    font-weight: 600;
+    border-bottom: 2px solid var(--red-margin);
+    padding-bottom: 2px;
+  }
+
+  .underline-scribble { width: 300px; height: 12px; display: block; margin-top: -4px; }
+
+  .home-right {
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .home-frog {
+    width: min(320px, 36vw);
+    transform: rotate(-4deg);
+    transition: transform 0.3s;
+  }
+  .home-frog:hover { transform: rotate(-4deg) scale(1.04); }
+  .home-frog.bounce { animation: bounce 0.6s; }
+  @keyframes bounce {
+    0%, 100% { transform: rotate(-4deg) translateY(0) scale(1); }
+    30% { transform: rotate(-4deg) translateY(-30px) scale(1.05); }
+    60% { transform: rotate(-4deg) translateY(10px) scale(0.95, 1.08); }
+  }
+
+  .home-toc {
+    margin-top: 14px;
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .home-toc ul { padding-left: 0; list-style: none; margin: 6px 0 0 0; }
+  .home-toc li {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .home-toc .bullet {
+    color: var(--red-margin);
+    flex-shrink: 0;
+  }
+  .home-toc .go { flex: 1; text-align: left; }
+  .home-toc .go {
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 0;
+    text-align: left;
+  }
+  .home-toc .go:hover {
+    text-decoration: underline wavy var(--red-margin);
+    text-underline-offset: 4px;
+    color: var(--red-margin);
+  }
+  .home-toc .go-unused {
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--ink);
+    text-decoration: underline wavy var(--red-margin);
+    text-underline-offset: 4px;
+    padding: 0;
+  }
+  .home-toc .go:hover { color: var(--red-margin); }
+
+  /* ================== GALLERY (comic strip) ================== */
+  .comic-strip {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 6px;
+    min-height: 360px;
+  }
+  .panel {
+    position: relative;
+    background: #fffbe8;
+    border: 2.5px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 3px 4px 0 rgba(26,58,92,0.18), inset 0 0 30px rgba(180,140,80,0.08);
+    overflow: hidden;
+    min-height: 0;
+  }
+  .panel:nth-child(odd)  { transform: rotate(-0.6deg); }
+  .panel:nth-child(even) { transform: rotate(0.5deg); }
+  .panel .panel-num {
+    position: absolute;
+    top: 4px; left: 6px;
+    width: 24px; height: 24px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 14px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 4;
+    transform: rotate(-6deg);
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.25);
+  }
+  .panel .panel-cap {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(255,247,224,0.95);
+    border-top: 1.5px solid var(--ink);
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--ink);
+    padding: 3px 10px;
+    line-height: 1.15;
+    z-index: 3;
+  }
+  .panel .panel-stage {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* Wide panel spans 2 rows */
+  .panel.wide { grid-row: span 2; }
+  .panel.tall-row { grid-row: span 1; }
+
+  /* Comic speech bubbles */
+  .bubble {
+    position: absolute;
+    background: #fff;
+    border: 2px solid var(--ink);
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--ink);
+    padding: 4px 12px;
+    border-radius: 18px;
+    z-index: 5;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+    max-width: 65%;
+    line-height: 1.15;
+  }
+  .bubble.shout {
+    border-radius: 4px;
+    border-width: 2.5px;
+    transform: rotate(-3deg);
+    font-family: 'Gloria Hallelujah', cursive;
+    background: #fff7c2;
+  }
+  .bubble.think {
+    border-style: dashed;
+    background: #f4f0e0;
+  }
+  .bubble .tail {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: #fff;
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+  .bubble.shout .tail { background: #fff7c2; }
+  .bubble.think .tail { background: #f4f0e0; border-style: dashed; }
+  .bubble .tail.bl { bottom: -7px; left: 16px; transform: rotate(45deg); }
+  .bubble .tail.br { bottom: -7px; right: 16px; transform: rotate(45deg); }
+  .bubble .tail.tl { top: -7px; left: 16px;    transform: rotate(225deg); }
+
+  /* SFX text */
+  .sfx {
+    position: absolute;
+    font-family: 'Gloria Hallelujah', cursive;
+    font-weight: 700;
+    color: var(--red-margin);
+    -webkit-text-stroke: 1.5px var(--ink);
+    text-stroke: 1.5px var(--ink);
+    z-index: 5;
+    pointer-events: none;
+    letter-spacing: 1px;
+  }
+
+  /* Action lines */
+  .action-lines {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ================== GALLERY (legacy outfit grid — kept for safety) ================== */
+  .gallery-grid-legacy {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 14px 16px;
+    flex: 1;
+    min-height: 0;
+    margin-top: 10px;
+  }
+  .gallery-wrap {
+    display: flex; flex-direction: column;
+    height: 100%;
+  }
+  .outfit-card {
+    position: relative;
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    background: #fff7e0;
+    padding: 6px 6px 28px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 2px 3px 0 rgba(26,58,92,0.12);
+    transition: transform 0.3s;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .outfit-card:nth-child(1) { transform: rotate(-1.5deg); }
+  .outfit-card:nth-child(2) { transform: rotate(0.8deg); }
+  .outfit-card:nth-child(3) { transform: rotate(-0.6deg); }
+  .outfit-card:nth-child(4) { transform: rotate(1.2deg); }
+  .outfit-card:hover {
+    transform: rotate(0deg) scale(1.04) !important;
+    z-index: 5;
+    box-shadow: 4px 6px 0 rgba(26,58,92,0.2);
+  }
+  .outfit-card svg { width: 100%; height: 100%; display: block; max-height: calc(100% - 6px); }
+  .outfit-caption {
+    position: absolute;
+    bottom: 4px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 18px; line-height: 1.1;
+    color: var(--ink);
+  }
+  .outfit-caption .stars { color: var(--red-margin); }
+  .tape {
+    position: absolute;
+    width: 52px; height: 16px;
+    background: rgba(244, 228, 150, 0.72);
+    border: 0.5px solid rgba(180,150,80,0.3);
+    box-shadow: inset 0 0 3px rgba(200,170,100,0.2);
+    z-index: 8;
+  }
+  .tape.tl { top: -7px; left: -10px; transform: rotate(-35deg); }
+  .tape.tr { top: -7px; right: -10px; transform: rotate(35deg); }
+
+  /* ================== MY FROGS ================== */
+  .frogs-wrap { display: flex; flex-direction: column; height: 100%; }
+  .frogs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 14px 16px;
+    flex: 1;
+    min-height: 0;
+    margin-top: 10px;
+  }
+  .frog-card {
+    position: relative;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fff7e0;
+    padding: 8px 8px 38px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 3px 4px 0 rgba(26,58,92,0.12);
+    transition: transform 0.25s, box-shadow 0.25s;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .frog-card:nth-child(1) { transform: rotate(-1.2deg); }
+  .frog-card:nth-child(2) { transform: rotate(0.9deg); }
+  .frog-card:nth-child(3) { transform: rotate(-0.5deg); }
+  .frog-card:nth-child(4) { transform: rotate(1deg); }
+  .frog-card:hover {
+    transform: rotate(0deg) scale(1.04) !important;
+    box-shadow: 5px 7px 0 rgba(26,58,92,0.22);
+    z-index: 5;
+  }
+  .frog-card svg { width: 100%; height: 100%; display: block; max-height: calc(100% - 6px); }
+  .frog-card-label {
+    position: absolute;
+    bottom: 6px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 20px; line-height: 1.05;
+    color: var(--ink);
+  }
+  .frog-card-label small {
+    display: block;
+    font-size: 14px;
+    color: var(--pencil);
+    opacity: 0.8;
+  }
+  .frog-card .edit-chip {
+    position: absolute;
+    top: 6px; right: 6px;
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    color: var(--red-margin);
+    background: var(--paper-warm);
+    border: 1.5px solid var(--red-margin);
+    border-radius: 10px;
+    padding: 0 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .frog-card:hover .edit-chip { opacity: 1; }
+
+  /* ================== HOUSE (scene page) ================== */
+  .scene-wrap { display: flex; flex-direction: column; height: 100%; }
+  .scene-frame {
+    position: relative;
+    margin-top: 10px;
+    flex: 1;
+    min-height: 0;
+    border: 2.5px solid var(--ink);
+    border-radius: 6px;
+    background: linear-gradient(to bottom, #fff3d8 0%, #f8e8c2 100%);
+    box-shadow: inset 0 0 30px rgba(180,140,80,0.15), 3px 3px 0 rgba(26,58,92,0.15);
+    overflow: hidden;
+    transform: rotate(-0.3deg);
+  }
+  .scene-frame svg { width: 100%; height: 100%; display: block; }
+  .scene-label {
+    position: absolute;
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    color: var(--ink);
+    background: rgba(255,247,224,0.92);
+    border: 1.2px solid var(--pencil);
+    padding: 1px 6px;
+    border-radius: 4px;
+    pointer-events: none; z-index: 6;
+  }
+  .speech {
+    position: absolute;
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 18px;
+    padding: 3px 12px;
+    box-shadow: 2px 3px 0 rgba(0,0,0,0.15);
+    z-index: 7;
+    transform: rotate(-2deg);
+  }
+  .speech::after {
+    content: "";
+    position: absolute;
+    bottom: -10px; left: 18px;
+    width: 14px; height: 14px;
+    background: #fff;
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    transform: rotate(45deg);
+  }
+
+  /* ================== FROG DETAIL / EDITOR ================== */
+  .edit-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 22px;
+    height: 100%;
+    min-height: 0;
+  }
+  .edit-left {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+    min-height: 0;
+  }
+  .edit-preview {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1 / 1;
+    border: 2.5px dashed var(--ink);
+    border-radius: 10px;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(156,195,138,0.35), transparent 60%),
+      #fff7e0;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 3px 3px 0 rgba(26,58,92,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .edit-preview::before {
+    content: "preview ✎";
+    position: absolute;
+    top: 8px; left: 12px;
+    font-size: 15px;
+    color: var(--pencil);
+    opacity: 0.7;
+    font-family: 'Caveat', cursive;
+  }
+  .edit-preview svg { width: 84%; height: 84%; display: block; }
+
+  .name-plate {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 30px;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1;
+  }
+  .name-input {
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 30px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px dashed var(--red-margin);
+    color: var(--ink);
+    text-align: center;
+    outline: none;
+    width: 100%; max-width: 260px;
+    padding: 4px 2px;
+  }
+  .name-input:focus { border-bottom-color: var(--ink); background: rgba(242,220,126,0.25); }
+
+  .edit-back {
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    background: transparent;
+    border: 1.8px solid var(--ink);
+    border-radius: 14px 3px 14px 3px;
+    padding: 3px 12px;
+    color: var(--ink);
+  }
+  .edit-back:hover { background: var(--wash-yellow); }
+
+  .edit-right {
+    overflow-y: auto;
+    padding-right: 8px;
+    min-height: 0;
+  }
+  .edit-right::-webkit-scrollbar { width: 8px; }
+  .edit-right::-webkit-scrollbar-thumb { background: rgba(26,58,92,0.3); border-radius: 4px; }
+
+  .field {
+    margin-bottom: 16px;
+  }
+  .field-label {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+    transform: rotate(-0.5deg);
+  }
+  .field-label .hint {
+    font-size: 16px;
+    color: var(--pencil);
+    opacity: 0.75;
+  }
+  .chip-row {
+    display: flex; flex-wrap: wrap; gap: 6px 8px;
+  }
+  .chip {
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    background: transparent;
+    border: 1.8px solid var(--ink);
+    color: var(--ink);
+    border-radius: 16px 4px 16px 4px;
+    padding: 3px 12px;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .chip:hover { background: rgba(242,220,126,0.4); transform: translateY(-1px); }
+  .chip.active {
+    background: var(--wash-yellow);
+    box-shadow: 2px 2px 0 rgba(26,58,92,0.2);
+  }
+  .chip .dot {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .food-row, .mood-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .stars-input {
+    display: inline-flex; gap: 4px;
+  }
+  .star-btn {
+    background: transparent; border: none;
+    font-size: 26px;
+    color: rgba(217,76,76,0.25);
+    padding: 0 2px;
+  }
+  .star-btn.on { color: var(--red-margin); }
+
+  .textarea-doodle {
+    width: 100%;
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    color: var(--ink);
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 26px, rgba(168,196,224,0.5) 26px 27px),
+      transparent;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 6px 10px;
+    line-height: 27px;
+    min-height: 90px;
+    resize: vertical;
+    outline: none;
+  }
+  .textarea-doodle:focus { box-shadow: 2px 2px 0 var(--wash-yellow); }
+
+  /* ================== UI: ribbit, fly, etc ================== */
+  .ribbit-pop {
+    position: fixed;
+    pointer-events: none;
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 42px;
+    color: var(--wash-green);
+    -webkit-text-stroke: 2px var(--ink);
+    z-index: 300;
+    animation: ribbit 1s ease-out forwards;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  @keyframes ribbit {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.3) rotate(-8deg); }
+    20% { opacity: 1; transform: translate(-50%, -18px) scale(1.2) rotate(4deg); }
+    70% { opacity: 1; transform: translate(-50%, -70px) scale(1) rotate(-2deg); }
+    100% { opacity: 0; transform: translate(-50%, -120px) scale(0.9) rotate(2deg); }
+  }
+
+  .fly {
+    position: fixed;
+    width: 18px; height: 18px;
+    z-index: 999;
+    cursor: pointer;
+    opacity: 0.9;
+  }
+
+  /* Drag stickers on home/scene */
+  .sticker {
+    position: absolute;
+    cursor: grab;
+    z-index: 10;
+    transition: transform 0.2s, filter 0.2s;
+    filter: drop-shadow(2px 4px 2px rgba(0,0,0,0.2));
+    touch-action: none;
+    user-select: none;
+  }
+  .sticker:hover { transform: scale(1.08) rotate(var(--rot, 0deg)); }
+  .sticker.dragging { cursor: grabbing; z-index: 100; transition: none; }
+
+  .egg-spot {
+    position: absolute;
+    cursor: help;
+    z-index: 6;
+  }
+  .hidden-hint {
+    position: absolute;
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    color: var(--pencil);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .egg-spot:hover .hidden-hint { opacity: 0.6; }
+
+  .instruction-chip {
+    position: fixed;
+    top: 12px; left: 50%;
+    transform: translateX(-50%) rotate(-1deg);
+    background: var(--wash-pink);
+    border: 1.5px solid var(--ink);
+    padding: 4px 14px;
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--ink);
+    border-radius: 18px;
+    z-index: 250;
+    opacity: 0.95;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    transition: opacity 0.6s;
+  }
+  .instruction-chip.fade { opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      Mr. Frog<br/>World
+    </div>
+
+    <div class="nav-label">pages</div>
+    <nav class="nav-list" id="navList">
+      <!-- filled by JS -->
+    </nav>
+
+    <svg class="sidebar-doodle" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 10 95 Q 60 80 110 95" fill="none" stroke="#1a3a5c" stroke-width="2"/>
+      <ellipse cx="60" cy="75" rx="32" ry="25" fill="#b5d49e" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="46" cy="55" r="14" fill="#b5d49e" stroke="#1a3a5c" stroke-width="2"/>
+      <circle cx="74" cy="55" r="14" fill="#b5d49e" stroke="#1a3a5c" stroke-width="2"/>
+      <circle cx="46" cy="58" r="8" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="74" cy="58" r="8" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="48" cy="61" r="4" fill="#1a3a5c"/>
+      <circle cx="76" cy="61" r="4" fill="#1a3a5c"/>
+      <path d="M 45 80 Q 60 92 75 80" stroke="#1a3a5c" stroke-width="2" fill="none"/>
+    </svg>
+
+    <div class="sidebar-footer">psst — click a frog on the My Frogs page to edit them ✎</div>
+  </aside>
+
+  <!-- PAGE STAGE -->
+  <main class="page-stage" id="pageStage">
+    <!-- active page renders here -->
+  </main>
+</div>
+
+<div class="instruction-chip" id="hint">click Mr. Frog for a ribbit · drag stickers · find the hidden bug 🐞</div>
+
+<!-- =============== AUDIO =============== -->
+<script>
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function ribbit() {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const now = ctx.currentTime;
+    for (let i = 0; i < 2; i++) {
+      const t0 = now + i * 0.13;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = 900;
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(110 + i*15, t0);
+      osc.frequency.exponentialRampToValueAtTime(70 + i*10, t0 + 0.1);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.28, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.11);
+      osc.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      osc.start(t0); osc.stop(t0 + 0.12);
+    }
+  }
+  function popSound() {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.11);
+  }
+  function pageFlipSound() {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 8) * 0.28;
+    }
+    const src = ctx.createBufferSource(); src.buffer = buffer;
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'bandpass'; filt.frequency.value = 2200;
+    src.connect(filt); filt.connect(ctx.destination);
+    src.start(now);
+  }
+</script>
+
+<!-- =============== DATA =============== -->
+<script>
+  // Frog state. Each has bodyColor, outfit (hat), clothes (body), activeTime, mood, likes, stars, notes, name.
+  const OUTFIT_HATS = [
+    { key: 'none',    label: 'no hat' },
+    { key: 'hat',     label: 'cowboy hat' },
+    { key: 'beanie',  label: 'pom beanie' },
+    { key: 'crown',   label: 'gold crown' },
+    { key: 'wizard',  label: 'wizard hat' },
+    { key: 'pirate',  label: 'pirate hat' },
+    { key: 'chef',    label: 'chef hat' }
+  ];
+  const OUTFIT_CLOTHES = [
+    { key: 'none',      label: 'just frog' },
+    { key: 'scarf',     label: 'cozy scarf' },
+    { key: 'bowtie',    label: 'bowtie' },
+    { key: 'raincoat',  label: 'raincoat' },
+    { key: 'superhero', label: 'cape' },
+    { key: 'glasses',   label: 'glasses' }
+  ];
+  const BODY_COLORS = [
+    { key: 'green',  label: 'pond green',   fill: '#b5d49e', dark: '#9cc38a' },
+    { key: 'blue',   label: 'tree blue',    fill: '#a8c4e0', dark: '#8ba8c4' },
+    { key: 'pink',   label: 'flamingo',     fill: '#f2b3b3', dark: '#e09494' },
+    { key: 'yellow', label: 'lemon',        fill: '#f2dc7e', dark: '#d9c45e' },
+    { key: 'purple', label: 'grape',        fill: '#c8a8d4', dark: '#a88ab4' },
+    { key: 'spot',   label: 'spotty',       fill: '#b5d49e', dark: '#7ba05e' }
+  ];
+  const TIMES = [
+    { key: 'morning', label: 'morning ☀' },
+    { key: 'noon',    label: 'noon' },
+    { key: 'evening', label: 'evening 🌆' },
+    { key: 'night',   label: 'night 🌙' }
+  ];
+  const MOODS = [
+    { key: 'happy',   label: 'happy' },
+    { key: 'sleepy',  label: 'sleepy' },
+    { key: 'grumpy',  label: 'grumpy' },
+    { key: 'silly',   label: 'silly' },
+    { key: 'shy',     label: 'shy' },
+    { key: 'hungry',  label: 'hungry' }
+  ];
+  const LIKES = ['flies', 'rain', 'books', 'naps', 'tea', 'songs', 'swimming', 'dancing', 'snails', 'pie'];
+
+  const DEFAULT_FROGS = [
+    { id: 1, name: 'Mr. Frog',   bodyColor: 'green',  hat: 'none',   clothes: 'glasses',   time: 'morning', mood: 'happy',  likes: ['books', 'tea'],       stars: 5, notes: 'the boss of the pond.' },
+    { id: 2, name: 'Hoppy',      bodyColor: 'yellow', hat: 'beanie', clothes: 'scarf',     time: 'evening', mood: 'sleepy', likes: ['naps', 'songs'],      stars: 4, notes: 'always listening to music.' },
+    { id: 3, name: 'Sir Ribbit', bodyColor: 'purple', hat: 'crown',  clothes: 'bowtie',    time: 'noon',    mood: 'silly',  likes: ['dancing', 'pie'],     stars: 5, notes: 'wants to be king of the swamp.' },
+    { id: 4, name: 'Croaksworth',bodyColor: 'blue',   hat: 'wizard', clothes: 'raincoat',  time: 'night',   mood: 'grumpy', likes: ['rain', 'snails'],     stars: 4, notes: 'knows every spell (he says).' },
+    { id: 5, name: 'Doodle',     bodyColor: 'pink',   hat: 'chef',   clothes: 'none',      time: 'morning', mood: 'hungry', likes: ['pie', 'flies'],       stars: 3, notes: 'makes the best fly pancakes.' },
+    { id: 6, name: 'Biff',       bodyColor: 'spot',   hat: 'pirate', clothes: 'superhero', time: 'evening', mood: 'shy',    likes: ['swimming', 'books'],  stars: 4, notes: 'tiny adventurer. scared of bees.' },
+    { id: 7, name: 'Mossy',      bodyColor: 'green',  hat: 'chef',   clothes: 'scarf',     time: 'morning', mood: 'happy',  likes: ['moss', 'stew'],       stars: 4, notes: 'bakes with swamp ingredients.' },
+    { id: 8, name: 'Lily',       bodyColor: 'pink',   hat: 'beanie', clothes: 'bowtie',    time: 'noon',    mood: 'silly',  likes: ['singing', 'bugs'],    stars: 5, notes: 'loudest frog in the pond.' }
+  ];
+
+  function loadFrogs() {
+    try {
+      const raw = localStorage.getItem('mrfrog_frogs_v2');
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_FROGS));
+  }
+  function saveFrogs() {
+    try { localStorage.setItem('mrfrog_frogs_v2', JSON.stringify(state.frogs)); } catch(e) {}
+  }
+
+  const state = {
+    page: localStorage.getItem('mrfrog_page_v2') || 'home',
+    editingId: null,
+    frogs: loadFrogs()
+  };
+
+  function getFrog(id) { return state.frogs.find(f => f.id === id); }
+</script>
+
+<!-- =============== FROG RENDER =============== -->
+<script>
+function frogMouth(mood) {
+  // returns an SVG path for the mouth
+  switch (mood) {
+    case 'sleepy': return `<path d="M 115 165 Q 150 175 185 165" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>`;
+    case 'grumpy': return `<path d="M 115 170 Q 150 150 185 170" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>`;
+    case 'silly':  return `<path d="M 110 160 Q 150 200 190 160" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+                          <path d="M 130 180 L 138 195 L 150 180 L 162 195 L 170 180" stroke="#d94c4c" stroke-width="2" fill="none"/>`;
+    case 'shy':    return `<ellipse cx="150" cy="168" rx="14" ry="5" fill="none" stroke="#1a3a5c" stroke-width="2.5"/>`;
+    case 'hungry': return `<ellipse cx="150" cy="172" rx="22" ry="14" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+                          <path d="M 130 168 L 170 168" stroke="#1a3a5c" stroke-width="1.5"/>`;
+    default:       return `<path d="M 115 165 Q 150 190 185 165" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+                          <path d="M 140 177 Q 150 182 160 177" fill="#d94c4c" stroke="#1a3a5c" stroke-width="1.5"/>`;
+  }
+}
+
+function frogEyes(mood) {
+  if (mood === 'sleepy') {
+    return `<path d="M 106 100 Q 118 108 130 100" stroke="#1a3a5c" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M 170 100 Q 182 108 194 100" stroke="#1a3a5c" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  }
+  if (mood === 'grumpy') {
+    return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="122" cy="104" r="9" fill="#1a3a5c"/>
+            <circle cx="186" cy="104" r="9" fill="#1a3a5c"/>
+            <path d="M 96 82 L 132 92" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 204 82 L 168 92" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  if (mood === 'silly') {
+    return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <path d="M 110 108 L 126 92" stroke="#1a3a5c" stroke-width="3"/>
+            <path d="M 126 108 L 110 92" stroke="#1a3a5c" stroke-width="3"/>
+            <circle cx="186" cy="104" r="9" fill="#1a3a5c"/>
+            <circle cx="189" cy="101" r="3" fill="#fffbe8"/>`;
+  }
+  if (mood === 'shy') {
+    return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+            <circle cx="120" cy="106" r="7" fill="#1a3a5c"/>
+            <circle cx="184" cy="106" r="7" fill="#1a3a5c"/>`;
+  }
+  // default + hungry
+  return `<circle cx="118" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+          <circle cx="182" cy="100" r="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+          <circle cx="122" cy="104" r="9" fill="#1a3a5c"/>
+          <circle cx="186" cy="104" r="9" fill="#1a3a5c"/>
+          <circle cx="125" cy="101" r="3" fill="#fffbe8"/>
+          <circle cx="189" cy="101" r="3" fill="#fffbe8"/>`;
+}
+
+function bodyPalette(bodyColor) {
+  const found = BODY_COLORS.find(b => b.key === bodyColor) || BODY_COLORS[0];
+  return found;
+}
+
+function hatSVG(hat) {
+  switch(hat) {
+    case 'hat': return `
+      <ellipse cx="150" cy="62" rx="70" ry="8" fill="#6b4423" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 100 62 Q 95 22 150 20 Q 205 22 200 62 Z" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2.5"/>
+      <rect x="100" y="55" width="100" height="8" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>`;
+    case 'beanie': return `
+      <path d="M 95 95 Q 90 45 150 40 Q 210 45 205 95 Q 200 85 150 83 Q 100 85 95 95 Z" fill="#c8a8d4" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="150" cy="32" r="14" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5"/>
+      <line x1="150" y1="20" x2="150" y2="44" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="140" y1="24" x2="160" y2="40" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="160" y1="24" x2="140" y2="40" stroke="#1a3a5c" stroke-width="1"/>`;
+    case 'crown': return `
+      <path d="M 105 85 L 115 45 L 135 70 L 150 35 L 165 70 L 185 45 L 195 85 Z" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="115" cy="50" r="4" fill="#d94c4c" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="150" cy="42" r="5" fill="#9cc38a" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="185" cy="50" r="4" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="1.5"/>`;
+    case 'wizard': return `
+      <path d="M 90 90 L 150 0 L 210 90 Z" fill="#7a5fa8" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="125,55 135,48 138,60 128,62" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="1"/>
+      <polygon points="160,35 170,30 173,42 163,44" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="1"/>
+      <circle cx="150" cy="15" r="4" fill="#f2dc7e"/>`;
+    case 'pirate': return `
+      <path d="M 90 88 Q 80 55 150 48 Q 220 55 210 88 L 90 88 Z" fill="#1a1a1a" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 100 75 L 135 65 L 118 48 Z" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2"/>
+      <circle cx="125" cy="63" r="3" fill="#1a1a1a"/>
+      <line x1="122" y1="60" x2="128" y2="66" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="128" y1="60" x2="122" y2="66" stroke="#1a1a1a" stroke-width="1.5"/>`;
+    case 'chef': return `
+      <path d="M 95 88 Q 80 55 110 40 Q 125 20 150 25 Q 175 20 190 40 Q 220 55 205 88 Z" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <rect x="90" y="80" width="120" height="14" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="115" cy="55" r="11" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="150" cy="40" r="13" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+      <circle cx="185" cy="55" r="11" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>`;
+    default: return '';
+  }
+}
+
+function clothesSVG(clothes) {
+  switch(clothes) {
+    case 'scarf': return `
+      <path d="M 80 215 Q 150 205 220 215 L 225 245 Q 150 238 75 245 Z" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 90 240 L 85 275 L 105 272 L 110 238 Z" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2.5"/>
+      <line x1="90" y1="220" x2="95" y2="245" stroke="#1a3a5c" stroke-width="1" opacity="0.5"/>
+      <line x1="180" y1="220" x2="185" y2="245" stroke="#1a3a5c" stroke-width="1" opacity="0.5"/>`;
+    case 'bowtie': return `
+      <path d="M 125 205 L 108 192 L 108 222 L 125 212 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>
+      <path d="M 175 205 L 192 192 L 192 222 L 175 212 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>
+      <rect x="140" y="200" width="20" height="16" rx="3" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>`;
+    case 'raincoat': return `
+      <path d="M 55 195 Q 45 280 62 295 L 238 295 Q 255 280 245 195 Q 205 208 150 208 Q 95 208 55 195 Z" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="115" cy="235" r="4" fill="#1a3a5c"/>
+      <circle cx="115" cy="255" r="4" fill="#1a3a5c"/>
+      <circle cx="115" cy="275" r="4" fill="#1a3a5c"/>`;
+    case 'superhero': return `
+      <path d="M 40 195 Q 10 250 40 290 Q 60 265 62 220 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+      <path d="M 260 195 Q 290 250 260 290 Q 240 265 238 220 Z" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+      <rect x="120" y="200" width="60" height="22" rx="4" fill="#1a3a5c" stroke="#1a3a5c" stroke-width="2"/>
+      <path d="M 140 206 L 148 215 L 160 200" stroke="#f2dc7e" stroke-width="3" fill="none"/>`;
+    case 'glasses': return `
+      <circle cx="118" cy="104" r="22" fill="none" stroke="#1a3a5c" stroke-width="3"/>
+      <circle cx="182" cy="104" r="22" fill="none" stroke="#1a3a5c" stroke-width="3"/>
+      <line x1="140" y1="104" x2="160" y2="104" stroke="#1a3a5c" stroke-width="3"/>
+      <circle cx="118" cy="104" r="22" fill="#a8c4e0" opacity="0.22"/>
+      <circle cx="182" cy="104" r="22" fill="#a8c4e0" opacity="0.22"/>`;
+    default: return '';
+  }
+}
+
+function frogSVG(frog, opts = {}) {
+  const { size = 260 } = opts;
+  const pal = bodyPalette(frog.bodyColor);
+  const spots = frog.bodyColor === 'spot' ? `
+    <circle cx="80" cy="160" r="10" fill="${pal.dark}"/>
+    <circle cx="200" cy="150" r="14" fill="${pal.dark}"/>
+    <circle cx="150" cy="240" r="8" fill="${pal.dark}"/>
+    <circle cx="105" cy="220" r="6" fill="${pal.dark}"/>
+    <circle cx="220" cy="210" r="7" fill="${pal.dark}"/>
+  ` : '';
+
+  return `
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet">
+  <!-- Body -->
+  <path d="M 60 185 Q 55 115 150 105 Q 245 115 240 185 Q 245 260 150 265 Q 55 260 60 185 Z"
+    fill="${pal.fill}" stroke="#1a3a5c" stroke-width="3" stroke-linejoin="round"/>
+  ${spots}
+  <!-- Belly -->
+  <ellipse cx="150" cy="210" rx="55" ry="45" fill="#f4e8c8" stroke="#1a3a5c" stroke-width="2" opacity="0.85"/>
+  <!-- Feet -->
+  <ellipse cx="88" cy="265" rx="28" ry="12" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <ellipse cx="212" cy="265" rx="28" ry="12" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <circle cx="75" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="88" cy="270" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="101" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="199" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="212" cy="270" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <circle cx="225" cy="268" r="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  <!-- Arms -->
+  <path d="M 68 190 Q 45 200 50 230" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 232 190 Q 255 200 250 230" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="50" cy="232" r="10" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <circle cx="250" cy="232" r="10" fill="${pal.dark}" stroke="#1a3a5c" stroke-width="2.5"/>
+  <!-- Head bumps -->
+  <circle cx="118" cy="95" r="28" fill="${pal.fill}" stroke="#1a3a5c" stroke-width="3"/>
+  <circle cx="182" cy="95" r="28" fill="${pal.fill}" stroke="#1a3a5c" stroke-width="3"/>
+  ${frogEyes(frog.mood)}
+  <!-- Cheeks -->
+  <ellipse cx="90" cy="155" rx="14" ry="8" fill="#f2b3b3" opacity="0.7"/>
+  <ellipse cx="210" cy="155" rx="14" ry="8" fill="#f2b3b3" opacity="0.7"/>
+  ${frogMouth(frog.mood)}
+  ${clothesSVG(frog.clothes)}
+  ${hatSVG(frog.hat)}
+</svg>`;
+}
+</script>
+
+<!-- =============== STICKERS =============== -->
+<script>
+function stickerSVG(kind) {
+  if (kind === 'lily') return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="66" height="66">
+    <ellipse cx="40" cy="45" rx="34" ry="20" fill="#9cc38a" stroke="#1a3a5c" stroke-width="2.5"/>
+    <path d="M 40 45 L 65 35" stroke="#1a3a5c" stroke-width="2.5" fill="none"/>
+    <path d="M 40 45 L 15 30" stroke="#1a3a5c" stroke-width="2.5" fill="none"/>
+    <circle cx="35" cy="35" r="5" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="1.5"/>
+    <circle cx="50" cy="50" r="4" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="1.5"/>
+  </svg>`;
+  if (kind === 'star') return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="58" height="58">
+    <path d="M 40 8 L 48 30 L 72 32 L 52 46 L 60 70 L 40 56 L 20 70 L 28 46 L 8 32 L 32 30 Z"
+      fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>`;
+  if (kind === 'heart') return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+    <path d="M 40 68 C 10 48 10 22 25 18 C 33 16 40 22 40 30 C 40 22 47 16 55 18 C 70 22 70 48 40 68 Z"
+      fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>`;
+  if (kind === 'bug') return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="50" height="50">
+    <ellipse cx="40" cy="44" rx="22" ry="24" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+    <line x1="40" y1="20" x2="40" y2="68" stroke="#1a3a5c" stroke-width="2.5"/>
+    <circle cx="32" cy="36" r="3" fill="#1a3a5c"/>
+    <circle cx="48" cy="36" r="3" fill="#1a3a5c"/>
+    <circle cx="30" cy="52" r="3" fill="#1a3a5c"/>
+    <circle cx="50" cy="52" r="3" fill="#1a3a5c"/>
+    <ellipse cx="40" cy="22" rx="10" ry="8" fill="#1a3a5c"/>
+  </svg>`;
+  if (kind === 'leaf') return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="58" height="58">
+    <path d="M 15 60 Q 20 20 65 15 Q 68 55 25 65 Z" fill="#9cc38a" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M 20 58 Q 40 40 63 18" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+  </svg>`;
+  if (kind === 'flower') return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+    <circle cx="40" cy="25" r="12" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2"/>
+    <circle cx="58" cy="40" r="12" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2"/>
+    <circle cx="40" cy="55" r="12" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2"/>
+    <circle cx="22" cy="40" r="12" fill="#f2b3b3" stroke="#1a3a5c" stroke-width="2"/>
+    <circle cx="40" cy="40" r="9" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2"/>
+  </svg>`;
+  if (kind === 'cloud') return `<svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg" width="76" height="48">
+    <path d="M 18 40 Q 10 40 10 32 Q 10 22 22 22 Q 25 12 40 14 Q 52 8 60 18 Q 75 16 78 28 Q 90 30 88 42 Q 85 48 75 46 L 25 46 Q 18 46 18 40 Z"
+      fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>`;
+  return '';
+}
+function scribbleUnderline() {
+  return `<svg class="underline-scribble" viewBox="0 0 340 14" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 5 8 Q 40 2 80 7 T 160 9 T 240 6 T 335 8" fill="none" stroke="#d94c4c" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 12 10 Q 50 6 90 10 T 180 8 T 260 11 T 330 9" fill="none" stroke="#d94c4c" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  </svg>`;
+}
+function titleScribble() {
+  return `<span class="title-scribble"><svg viewBox="0 0 300 10" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 5 6 Q 50 2 100 5 T 200 7 T 298 4" fill="none" stroke="#1a3a5c" stroke-width="2" stroke-linecap="round"/>
+  </svg></span>`;
+}
+</script>
+
+<!-- =============== PAGES =============== -->
+<script>
+const PAGES = [
+  { id: 'home',    label: 'Home',       ruled: false },
+  { id: 'gallery', label: 'Comic',      ruled: false },
+  { id: 'frogs',   label: 'My Frogs',   ruled: true },
+  { id: 'house',   label: 'My House',   ruled: false },
+  // edit is hidden from sidebar
+];
+
+const PAGE_META = {
+  home:    { num: 1, date: 'Tuesday · cover' },
+  gallery: { num: 2, date: 'Friday sketches' },
+  frogs:   { num: 3, date: 'my frog friends' },
+  house:   { num: 4, date: 'Wed. after dinner' },
+  edit:    { num: '✎', date: 'edit a frog' }
+};
+
+function renderHome() {
+  const mrFrog = getFrog(1);
+  return `
+    <div class="page" id="currentPage">
+      <div class="seam"></div>
+
+      <div class="spread">
+        <!-- LEFT half: frog portrait + scribbled doodles -->
+        <div class="half left">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 1</div>
+          <div class="date-stamp-h">~ Tuesday</div>
+
+          <div class="half-inner" style="align-items:center; justify-content:center;">
+            <div class="kicker" style="margin-top:8px;">✦ drew him today ✦</div>
+            <div id="coverFrog" style="flex:1; display:flex; align-items:center; justify-content:center; width:100%;">
+              ${frogSVG(mrFrog, { size: 340 })}
+            </div>
+            <div style="font-family:'Caveat',cursive; font-size:22px; color:var(--pencil); transform:rotate(-1.5deg); text-align:center;">
+              ← this is Mr. Frog<br/><span style="font-size:17px;">(leader of the pond)</span>
+            </div>
+          </div>
+
+          <!-- Stickers on left -->
+          <div class="sticker" data-kind="lily"  style="bottom:60px; left:130px; --rot:8deg; transform: rotate(8deg);">${stickerSVG('lily')}</div>
+        </div>
+
+        <!-- RIGHT half: title + TOC -->
+        <div class="half right">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 2</div>
+          <div class="date-stamp-h">my notebook</div>
+
+          <div class="half-inner" style="justify-content:center; gap:6px;">
+            <div class="kicker">✦ THIS BOOK BELONGS TO ✦</div>
+            <div class="home-title">
+              <span class="w1">Mr. Frog</span> <span class="amp">&amp;</span>
+              <br/><span class="w2">the whole pond!</span>
+            </div>
+            ${scribbleUnderline()}
+            <div class="home-byline">drawn by <span class="name">me</span> — age 11 and ¾</div>
+
+            <div class="home-toc">
+              <div style="font-family:'Gloria Hallelujah',cursive; font-size:22px; color:var(--ink); margin-top:14px; transform: rotate(-1deg); display:inline-block;">inside this book:</div>
+              <ul>
+                <li><span class="bullet">✦</span><button class="go" data-go="gallery">pg. 3 — Mr. Frog vs. The Big Fly (comic!)</button></li>
+                <li><span class="bullet">✦</span><button class="go" data-go="frogs">pg. 5 — my 8 frog friends</button></li>
+                <li><span class="bullet">✦</span><button class="go" data-go="house">pg. 7 — Mr. Frog's room</button></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Stickers on right -->
+          <div class="sticker" data-kind="star"  style="top:60px; right:120px; --rot:-14deg; transform: rotate(-14deg);">${stickerSVG('star')}</div>
+          <div class="sticker" data-kind="heart" style="top:42%; right:30px; --rot:-5deg; transform: rotate(-5deg);">${stickerSVG('heart')}</div>
+
+          <div class="egg-spot" style="top:56%; right:18px; width:26px; height:26px;">
+            <div class="hidden-hint" style="right:32px; top:2px;">click for a bug!</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="corner-curl"></div>
+    </div>
+  `;
+}
+
+function renderGallery() {
+  // Comic strip: "Mr. Frog vs. The Big Fly" — 6 panels across two pages.
+  const mrFrog = getFrog(1);
+
+  // Background sky / pond / kitchen helpers
+  const skyBg = (variant = 'day') => {
+    if (variant === 'sunset') return `<rect width="100%" height="100%" fill="url(#sunsetGrad)"/>`;
+    if (variant === 'night')  return `<rect width="100%" height="100%" fill="#3d4a6b"/>`;
+    return `<rect width="100%" height="100%" fill="#cfe6f0"/>`;
+  };
+
+  // Reusable inline SVG defs
+  const defs = `
+    <defs>
+      <linearGradient id="sunsetGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f8d098"/>
+        <stop offset="55%" stop-color="#f4a76a"/>
+        <stop offset="100%" stop-color="#c87a4a"/>
+      </linearGradient>
+    </defs>
+  `;
+
+  // Pond / lily pad background
+  const pondScene = `
+    <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block;">
+      ${defs}
+      ${skyBg('day')}
+      <!-- Clouds -->
+      <ellipse cx="80" cy="50" rx="34" ry="11" fill="#fff" opacity="0.85"/>
+      <ellipse cx="320" cy="35" rx="28" ry="9" fill="#fff" opacity="0.85"/>
+      <!-- Reeds -->
+      <g stroke="#5a7a3a" stroke-width="3" fill="none">
+        <path d="M 30 280 Q 28 200 36 160"/>
+        <path d="M 50 280 Q 52 210 44 170"/>
+        <path d="M 360 280 Q 358 200 366 165"/>
+      </g>
+      <!-- Pond -->
+      <ellipse cx="200" cy="240" rx="240" ry="60" fill="#7fb6cc"/>
+      <ellipse cx="200" cy="232" rx="220" ry="48" fill="#9ccbdb"/>
+      <path d="M 80 230 Q 200 220 320 232" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.7"/>
+      <!-- Lily pad -->
+      <ellipse cx="180" cy="218" rx="58" ry="14" fill="#5a8c3a" stroke="#1a3a5c" stroke-width="2"/>
+      <path d="M 130 218 L 180 218" stroke="#1a3a5c" stroke-width="1.5" opacity="0.5"/>
+    </svg>
+  `;
+
+  const kitchenScene = `
+    <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block;">
+      <rect width="100%" height="100%" fill="#fce4b8"/>
+      <!-- Wallpaper stripes -->
+      <g stroke="#e8c089" stroke-width="1" opacity="0.6">
+        ${Array.from({length:18},(_,i)=>`<line x1="${i*24}" y1="0" x2="${i*24}" y2="180"/>`).join('')}
+      </g>
+      <!-- Counter -->
+      <rect x="0" y="180" width="400" height="14" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2"/>
+      <rect x="0" y="194" width="400" height="86" fill="#d4b890"/>
+      <!-- Window -->
+      <rect x="280" y="30" width="100" height="70" fill="#a8d4e0" stroke="#1a3a5c" stroke-width="2.5"/>
+      <line x1="330" y1="30" x2="330" y2="100" stroke="#1a3a5c" stroke-width="2"/>
+      <line x1="280" y1="65" x2="380" y2="65" stroke="#1a3a5c" stroke-width="2"/>
+      <!-- Pot on counter -->
+      <ellipse cx="100" cy="180" rx="40" ry="6" fill="#1a3a5c" opacity="0.3"/>
+      <rect x="60" y="140" width="80" height="40" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2.5"/>
+      <ellipse cx="100" cy="140" rx="40" ry="6" fill="#b53b3b" stroke="#1a3a5c" stroke-width="2"/>
+      <!-- Steam -->
+      <path d="M 80 130 Q 75 115 85 105 Q 80 95 90 88" stroke="#fff" stroke-width="2" fill="none" opacity="0.7"/>
+      <path d="M 100 130 Q 105 115 95 105 Q 100 95 92 88" stroke="#fff" stroke-width="2" fill="none" opacity="0.7"/>
+      <path d="M 115 130 Q 120 115 110 105" stroke="#fff" stroke-width="2" fill="none" opacity="0.7"/>
+    </svg>
+  `;
+
+  const sunsetScene = `
+    <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block;">
+      ${defs}
+      ${skyBg('sunset')}
+      <circle cx="200" cy="160" r="50" fill="#ffe0a8" opacity="0.85"/>
+      <ellipse cx="200" cy="240" rx="240" ry="55" fill="#7a4a3a"/>
+      <ellipse cx="200" cy="232" rx="220" ry="44" fill="#9a6a4a"/>
+      <!-- Lily pad -->
+      <ellipse cx="200" cy="220" rx="70" ry="16" fill="#3a5a2a" stroke="#1a3a5c" stroke-width="2"/>
+      <!-- Reeds silhouette -->
+      <g stroke="#3a2a1a" stroke-width="3" fill="none">
+        <path d="M 40 280 Q 38 200 46 160"/>
+        <path d="M 360 280 Q 358 200 366 165"/>
+        <path d="M 70 280 Q 72 220 64 180"/>
+      </g>
+    </svg>
+  `;
+
+  // The fly enemy
+  const flySVG = (size = 60, angry = false) => `
+    <svg viewBox="0 0 80 80" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+      <!-- Wings -->
+      <ellipse cx="20" cy="30" rx="14" ry="20" fill="rgba(200,220,255,0.55)" stroke="#1a3a5c" stroke-width="1.5" transform="rotate(-25 20 30)"/>
+      <ellipse cx="60" cy="30" rx="14" ry="20" fill="rgba(200,220,255,0.55)" stroke="#1a3a5c" stroke-width="1.5" transform="rotate(25 60 30)"/>
+      <!-- Body -->
+      <ellipse cx="40" cy="50" rx="22" ry="18" fill="#3a3a3a" stroke="#1a1a1a" stroke-width="2"/>
+      <ellipse cx="40" cy="48" rx="20" ry="6" fill="#1a1a1a" opacity="0.6"/>
+      <!-- Head -->
+      <circle cx="40" cy="30" r="14" fill="#3a3a3a" stroke="#1a1a1a" stroke-width="2"/>
+      <!-- Eyes -->
+      <circle cx="33" cy="28" r="5" fill="#d94c4c"/>
+      <circle cx="47" cy="28" r="5" fill="#d94c4c"/>
+      <circle cx="34" cy="27" r="1.5" fill="#fff"/>
+      <circle cx="48" cy="27" r="1.5" fill="#fff"/>
+      ${angry ? '<path d="M 28 22 L 36 26 M 52 22 L 44 26" stroke="#1a1a1a" stroke-width="2" fill="none"/>' : ''}
+      <!-- Legs -->
+      <g stroke="#1a1a1a" stroke-width="1.5" fill="none">
+        <path d="M 25 60 L 15 70"/>
+        <path d="M 40 65 L 40 75"/>
+        <path d="M 55 60 L 65 70"/>
+      </g>
+    </svg>
+  `;
+
+  // Frog rendered at custom size with optional rotation/translation
+  const frogAt = (opts = {}, frogVariant = mrFrog) => {
+    const { size = 140, x = 50, y = 50, rot = 0, scaleX = 1 } = opts;
+    return `<div style="position:absolute; left:${x}%; top:${y}%; transform: translate(-50%,-50%) rotate(${rot}deg) scaleX(${scaleX});">${frogSVG(frogVariant, { size })}</div>`;
+  };
+
+  // SFX helper
+  const sfx = (text, opts = {}) => {
+    const { x = 50, y = 30, size = 32, rot = -8, color } = opts;
+    return `<div class="sfx" style="left:${x}%; top:${y}%; transform: translate(-50%,-50%) rotate(${rot}deg); font-size:${size}px; ${color ? `color:${color};` : ''}">${text}</div>`;
+  };
+
+  return `
+    <div class="page">
+      <div class="seam"></div>
+
+      <div class="spread">
+        <!-- LEFT page -->
+        <div class="half left">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 3</div>
+          <div class="date-stamp-h">~ Sat. comic time</div>
+
+          <div class="half-inner">
+            <h2 class="page-title" style="font-size:22px; max-width:90%;">Mr. Frog vs. The Big Fly</h2>
+            ${titleScribble()}
+            <p class="page-subtitle" style="font-size:17px;">a comic by me — episode 1</p>
+
+            <div class="comic-strip">
+              <!-- Panel 1: lazy day on lily pad -->
+              <div class="panel">
+                <div class="panel-num">1</div>
+                <div class="panel-stage">${pondScene}</div>
+                ${frogAt({ size: 130, x: 50, y: 60, rot: -3 }, { ...mrFrog, mood: 'sleepy' })}
+                <div class="bubble think" style="top:8%; right:8%;">
+                  nice quiet morning...
+                  <span class="tail bl"></span>
+                </div>
+                <div class="panel-cap">it was a regular tuesday on the pond.</div>
+              </div>
+
+              <!-- Panel 2: BUZZ! enter the fly -->
+              <div class="panel">
+                <div class="panel-num">2</div>
+                <div class="panel-stage">${pondScene}</div>
+                ${frogAt({ size: 110, x: 35, y: 65, rot: 5 }, { ...mrFrog, mood: 'happy' })}
+                <div style="position:absolute; top:18%; right:18%; transform: rotate(8deg);">${flySVG(70, false)}</div>
+                ${sfx('BZZZZ!', { x: 70, y: 12, size: 28, rot: -10 })}
+                <!-- Motion lines from fly -->
+                <svg class="action-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <g stroke="#1a3a5c" stroke-width="0.4" fill="none" opacity="0.6">
+                    <path d="M 60 25 Q 70 22 78 28"/>
+                    <path d="M 65 30 Q 75 27 82 33"/>
+                  </g>
+                </svg>
+                <div class="panel-cap">until... a strange visitor arrived.</div>
+              </div>
+
+              <!-- Panel 3: epic stare-down -->
+              <div class="panel">
+                <div class="panel-num">3</div>
+                <div class="panel-stage">${pondScene}</div>
+                ${frogAt({ size: 100, x: 25, y: 60, rot: 0 }, { ...mrFrog, mood: 'grumpy' })}
+                <div style="position:absolute; top:35%; right:18%;">${flySVG(60, true)}</div>
+                <!-- Stare lines -->
+                <svg class="action-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <g stroke="#d94c4c" stroke-width="0.4" stroke-dasharray="2 1.5" fill="none" opacity="0.85">
+                    <line x1="30" y1="55" x2="72" y2="40"/>
+                    <line x1="30" y1="60" x2="72" y2="45"/>
+                  </g>
+                </svg>
+                <div class="bubble shout" style="bottom:32%; left:6%; max-width:38%;">
+                  YOU.
+                  <span class="tail br"></span>
+                </div>
+                <div class="panel-cap">it was personal now.</div>
+              </div>
+            </div>
+
+            <div style="margin-top:6px; font-family:'Caveat',cursive; font-size:17px; color:var(--pencil); transform:rotate(-0.8deg);">
+              ↑ to be continued on the next page →
+            </div>
+          </div>
+
+          <div class="sticker" data-kind="star" style="top:36px; right:36px; --rot:20deg; transform: rotate(20deg); width:40px;">${stickerSVG('star')}</div>
+        </div>
+
+        <!-- RIGHT page -->
+        <div class="half right">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 4</div>
+          <div class="date-stamp-h">~ part two!</div>
+
+          <div class="half-inner">
+            <h2 class="page-title" style="transform:rotate(1deg); font-size:24px;">...the Showdown!</h2>
+            ${titleScribble()}
+            <p class="page-subtitle" style="font-size:17px;">(warning: dramatic frog tongue ahead)</p>
+
+            <div class="comic-strip">
+              <!-- Panel 4: tongue out, mid-air chase -->
+              <div class="panel">
+                <div class="panel-num">4</div>
+                <div class="panel-stage">${pondScene}</div>
+                ${frogAt({ size: 120, x: 30, y: 55, rot: -8 }, { ...mrFrog, mood: 'silly' })}
+                <!-- Tongue line -->
+                <svg class="action-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path d="M 38 50 Q 55 35 75 38" stroke="#d94c4c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                </svg>
+                <div style="position:absolute; top:32%; right:14%; transform: rotate(-15deg);">${flySVG(58, true)}</div>
+                ${sfx('SLURP!', { x: 60, y: 30, size: 26, rot: -6, color: '#d94c4c' })}
+                <div class="panel-cap">→ the legendary tongue strike!</div>
+              </div>
+
+              <!-- Panel 5: missed! fly escapes -->
+              <div class="panel">
+                <div class="panel-num">5</div>
+                <div class="panel-stage">${pondScene}</div>
+                ${frogAt({ size: 110, x: 30, y: 65, rot: 4 }, { ...mrFrog, mood: 'grumpy' })}
+                <div style="position:absolute; top:14%; right:8%; transform: rotate(10deg);">${flySVG(56, false)}</div>
+                <!-- Sweat drop -->
+                <svg class="action-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <g stroke="#1a3a5c" stroke-width="0.4" fill="none" opacity="0.6">
+                    <path d="M 70 18 Q 78 12 86 18"/>
+                    <path d="M 76 24 Q 82 18 88 24"/>
+                  </g>
+                </svg>
+                <div class="bubble" style="bottom:32%; left:30%; max-width:50%;">
+                  ...he is too fast.
+                  <span class="tail bl"></span>
+                </div>
+                <div class="panel-cap">he missed. (it happens to the best frogs.)</div>
+              </div>
+
+              <!-- Panel 6: sunset, peace, snail in mouth instead -->
+              <div class="panel">
+                <div class="panel-num">6</div>
+                <div class="panel-stage">${sunsetScene}</div>
+                ${frogAt({ size: 130, x: 50, y: 60, rot: 2 }, { ...mrFrog, mood: 'happy' })}
+                <!-- Snack: a snail floating to mouth -->
+                <div style="position:absolute; bottom:28%; left:62%; font-size:30px;">🐌</div>
+                <div class="bubble shout" style="top:8%; right:8%; max-width:40%;">
+                  snail dinner!
+                  <span class="tail br"></span>
+                </div>
+                <div class="panel-cap">but the pond is full of friends. THE END ✦</div>
+              </div>
+            </div>
+
+            <div style="margin-top:6px; text-align:right; font-family:'Caveat',cursive; font-size:17px; color:var(--red-margin); transform:rotate(0.8deg);">
+              p.s. the fly comes back in episode 2!!
+            </div>
+          </div>
+
+          <div class="sticker" data-kind="heart" style="bottom:14px; right:40px; --rot:-8deg; transform: rotate(-8deg);">${stickerSVG('heart')}</div>
+        </div>
+      </div>
+
+      <div class="corner-curl"></div>
+    </div>
+  `;
+}
+
+function renderFrogs() {
+  const card = (f) => `
+    <div class="frog-card" data-frog-id="${f.id}" tabindex="0">
+      <span class="edit-chip">edit ✎</span>
+      ${frogSVG(f, { size: 140 })}
+      <div class="frog-card-label">
+        ${f.name}
+        <small>${moodLabel(f.mood)} · ${f.likes.slice(0,2).join(', ') || '—'}</small>
+      </div>
+    </div>
+  `;
+  return `
+    <div class="page ruled">
+      <div class="seam"></div>
+
+      <div class="spread">
+        <!-- LEFT -->
+        <div class="half left">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 5</div>
+          <div class="date-stamp-h">~ my frog friends</div>
+
+          <div class="half-inner">
+            <h2 class="page-title">My Frogs 🐸</h2>
+            ${titleScribble()}
+            <p class="page-subtitle">tap a frog to fix their look</p>
+
+            <div class="frogs-grid" id="frogsGrid">
+              ${state.frogs.slice(0, 4).map(card).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="half right">
+          <div class="margin-line-h"></div>
+          <div class="holes-h">${'<div class="hole"></div>'.repeat(3)}</div>
+          <div class="page-num-h">pg. 6</div>
+          <div class="date-stamp-h">more frogs!</div>
+
+          <div class="half-inner">
+            <h2 class="page-title" style="transform:rotate(1deg);">more frogs 🐸</h2>
+            ${titleScribble()}
+            <p class="page-subtitle">(I keep finding them in the yard)</p>
+
+            <div class="frogs-grid">
+              ${state.frogs.slice(4, 8).map(card).join('')}
+            </div>
+
+            <div style="margin-top:10px; text-align:right; font-family:'Caveat',cursive; font-size:17px; color:var(--pencil); transform:rotate(-0.4deg);">
+              ↑ 8 frogs so far. more soon!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="corner-curl"></div>
+    </div>
+  `;
+}
+
+function renderHouse() {
+  return `
+    <div class="page">
+      <div class="seam"></div>
+
+      <div class="spread single">
+        <!-- Mirrored margins & holes on each side -->
+        <div style="position:absolute; left:80px; top:0; bottom:0; width:1.5px; background:var(--red-margin); opacity:0.5; z-index:1;"></div>
+        <div style="position:absolute; right:80px; top:0; bottom:0; width:1.5px; background:var(--red-margin); opacity:0.5; z-index:1;"></div>
+        <div style="position:absolute; left:22px; top:0; bottom:0; width:30px; display:flex; flex-direction:column; justify-content:space-around; padding:50px 0; z-index:1;">
+          ${'<div class="hole" style="width:18px; height:18px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #1a1812, #000); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.35);"></div>'.repeat(3)}
+        </div>
+        <div style="position:absolute; right:22px; top:0; bottom:0; width:30px; display:flex; flex-direction:column; justify-content:space-around; padding:50px 0; z-index:1;">
+          ${'<div class="hole" style="width:18px; height:18px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #1a1812, #000); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.35);"></div>'.repeat(3)}
+        </div>
+
+        <div style="position:absolute; top:22px; left:30px; font-family:'Caveat',cursive; font-size:22px; color:var(--pencil); transform:rotate(-4deg); z-index:5; opacity:0.65;">pg. 7</div>
+        <div style="position:absolute; top:22px; right:30px; font-family:'Caveat',cursive; font-size:22px; color:var(--pencil); transform:rotate(3deg); z-index:5; opacity:0.65;">pg. 8</div>
+        <div style="position:absolute; top:22px; left:50%; transform:translateX(-50%) rotate(-1deg); font-family:'Caveat',cursive; font-size:20px; color:var(--pencil); opacity:0.8; z-index:5;">~ Wednesday after dinner</div>
+
+        <div class="half-inner" style="padding: 40px 110px 40px 110px; position:relative; z-index:2;">
+          <h2 class="page-title" style="text-align:center; width:100%;">Mr. Frog's Room 🏡</h2>
+          <div style="text-align:center; margin-bottom:6px;">${titleScribble()}</div>
+          <p class="page-subtitle" style="text-align:center;">drew this BIG so it takes up both pages (he is v. messy. sorry mom.)</p>
+
+          <!-- Scene frame, taped across the seam like a Polaroid -->
+          <div class="scene-frame" style="position:relative; flex:1; min-height:0; margin-top:12px; transform: rotate(-0.3deg);">
+            <!-- Masking tape over the seam -->
+            <span class="tape" style="top:-9px; left:50%; transform: translateX(-50%) rotate(-2deg); width:120px; height:22px;"></span>
+            <span class="tape" style="bottom:-9px; left:50%; transform: translateX(-50%) rotate(2deg); width:120px; height:22px;"></span>
+
+            ${sceneSVG()}
+
+            <!-- Labels -->
+            <div class="scene-label" style="top:78%; left:3%;">↑ his BED <span style="font-size:13px; color:#888;">(unmade lol)</span></div>
+            <div class="scene-label" style="top:48%; left:22%;">← FLY HUNT poster</div>
+            <div class="scene-label" style="top:80%; left:48%;">↑ DESK <span style="font-size:13px; color:#888;">(snacks mostly)</span></div>
+            <div class="scene-label" style="top:46%; right:4%; text-align:right;">↑ pond WINDOW</div>
+            <div class="speech" style="top:4%; left:32%;">it's a reading day!</div>
+          </div>
+
+          <div style="display:flex; gap:14px; margin-top:10px; align-items:center; justify-content:center;">
+            <span style="font-family:'Caveat',cursive; font-size:20px; color:var(--pencil); transform:rotate(-1deg); display:inline-block;">✎ stuff in the room:</span>
+            <span style="font-family:'Caveat',cursive; font-size:18px; color:var(--ink);">bed · desk · <span style="border-bottom:1.5px wavy var(--red-margin);">fly trophy</span> · pond window · tea · one spider 🕷</span>
+          </div>
+        </div>
+
+        <!-- Stickers -->
+        <div class="sticker" data-kind="cloud"  style="top:70px; right:130px; --rot:4deg; transform: rotate(4deg);">${stickerSVG('cloud')}</div>
+        <div class="sticker" data-kind="leaf"   style="bottom:24px; right:130px; --rot:-15deg; transform: rotate(-15deg);">${stickerSVG('leaf')}</div>
+        <div class="sticker" data-kind="flower" style="bottom:24px; left:140px; --rot:10deg; transform: rotate(10deg);">${stickerSVG('flower')}</div>
+      </div>
+
+      <div class="corner-curl"></div>
+    </div>
+  `;
+}
+
+function renderEdit() {
+  const frog = getFrog(state.editingId) || state.frogs[0];
+  return `
+    <div class="page ruled">
+      <div class="seam"></div>
+
+      <div class="spread single">
+        <div style="position:absolute; left:80px; top:0; bottom:0; width:1.5px; background:var(--red-margin); opacity:0.5; z-index:1;"></div>
+        <div style="position:absolute; right:80px; top:0; bottom:0; width:1.5px; background:var(--red-margin); opacity:0.5; z-index:1;"></div>
+        <div style="position:absolute; left:22px; top:0; bottom:0; width:30px; display:flex; flex-direction:column; justify-content:space-around; padding:50px 0; z-index:1;">
+          ${'<div style="width:18px; height:18px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #1a1812, #000); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.35);"></div>'.repeat(3)}
+        </div>
+        <div style="position:absolute; right:22px; top:0; bottom:0; width:30px; display:flex; flex-direction:column; justify-content:space-around; padding:50px 0; z-index:1;">
+          ${'<div style="width:18px; height:18px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #1a1812, #000); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 1px 1px 0 rgba(255,255,255,0.35);"></div>'.repeat(3)}
+        </div>
+
+        <div style="position:absolute; top:22px; left:30px; font-family:'Caveat',cursive; font-size:22px; color:var(--pencil); transform:rotate(-4deg); z-index:5; opacity:0.65;">pg. ✎</div>
+        <div style="position:absolute; top:22px; right:30px; font-family:'Caveat',cursive; font-size:20px; color:var(--pencil); transform:rotate(3deg); z-index:5; opacity:0.75;">~ fixing up a frog</div>
+
+        <div style="position:relative; z-index:2; padding: 40px 110px 30px 110px; height:100%; display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+            <button class="edit-back" id="backBtn">← back to my frogs</button>
+            <h2 class="page-title" style="font-size:30px;">Frog Profile ✎</h2>
+          </div>
+          ${titleScribble()}
+
+          <div class="edit-wrap" style="margin-top:10px; flex:1; min-height:0;">
+            <div class="edit-left">
+              <div class="edit-preview" id="editPreview">
+                ${frogSVG(frog, { size: 260 })}
+              </div>
+              <input class="name-input" id="nameInput" value="${escapeHtml(frog.name)}" maxlength="20"/>
+              <div style="font-family:'Caveat',cursive; font-size:16px; color:var(--pencil);">
+                ⭐ friendship: <span class="stars-input" id="starsInput">
+                  ${[1,2,3,4,5].map(n => `<button class="star-btn ${n <= frog.stars ? 'on' : ''}" data-star="${n}">★</button>`).join('')}
+                </span>
+              </div>
+            </div>
+
+            <div class="edit-right" id="editFields">
+              ${field('body color', 'body', BODY_COLORS.map(c => `
+                <button class="chip ${frog.bodyColor === c.key ? 'active' : ''}" data-field="bodyColor" data-val="${c.key}">
+                  <span class="dot" style="background:${c.fill}"></span>${c.label}
+                </button>`).join(''))}
+
+              ${field('hat', 'hat', OUTFIT_HATS.map(h => `
+                <button class="chip ${frog.hat === h.key ? 'active' : ''}" data-field="hat" data-val="${h.key}">${h.label}</button>`).join(''))}
+
+              ${field('clothes & accessories', 'clothes', OUTFIT_CLOTHES.map(c => `
+                <button class="chip ${frog.clothes === c.key ? 'active' : ''}" data-field="clothes" data-val="${c.key}">${c.label}</button>`).join(''))}
+
+              ${field('mood', 'mood', MOODS.map(m => `
+                <button class="chip ${frog.mood === m.key ? 'active' : ''}" data-field="mood" data-val="${m.key}">${m.label}</button>`).join(''))}
+
+              ${field('favorite time of day', 'time', TIMES.map(t => `
+                <button class="chip ${frog.time === t.key ? 'active' : ''}" data-field="time" data-val="${t.key}">${t.label}</button>`).join(''))}
+
+              ${field('things they like', 'likes', LIKES.map(l => `
+                <button class="chip ${frog.likes.includes(l) ? 'active' : ''}" data-field="likes" data-val="${l}" data-multi="1">${l}</button>`).join(''), 'pick as many as you want')}
+
+              <div class="field">
+                <div class="field-label">notes <span class="hint">anything cool about them</span></div>
+                <textarea class="textarea-doodle" id="notesInput" rows="3" placeholder="e.g. likes to sing in the rain...">${escapeHtml(frog.notes || '')}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="corner-curl"></div>
+    </div>
+  `;
+}
+
+function field(label, key, inner, hint) {
+  return `
+    <div class="field">
+      <div class="field-label">${label} ${hint ? `<span class="hint">${hint}</span>` : ''}</div>
+      <div class="chip-row">${inner}</div>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function moodLabel(m) {
+  const f = MOODS.find(x => x.key === m);
+  return f ? f.label : m;
+}
+
+// SCENE SVG (from previous scene content, simplified)
+function sceneSVG() {
+  return `<svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="800" height="280" fill="#e4d4b0"/>
+    <g opacity="0.3" stroke="#c8a8d4" stroke-width="1.2" fill="none">
+      ${Array.from({length: 13}, (_, i) => `<line x1="${30 + i*60}" y1="0" x2="${30 + i*60}" y2="280"/>`).join('')}
+    </g>
+    <rect x="0" y="270" width="800" height="12" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2"/>
+    <rect x="0" y="282" width="800" height="138" fill="#d4b890"/>
+    <g stroke="#a35c2a" stroke-width="1" opacity="0.5">
+      <line x1="0" y1="310" x2="800" y2="310"/>
+      <line x1="0" y1="340" x2="800" y2="340"/>
+      <line x1="0" y1="370" x2="800" y2="370"/>
+      <line x1="0" y1="400" x2="800" y2="400"/>
+      <line x1="150" y1="282" x2="140" y2="420"/>
+      <line x1="320" y1="282" x2="310" y2="420"/>
+      <line x1="520" y1="282" x2="530" y2="420"/>
+      <line x1="680" y1="282" x2="700" y2="420"/>
+    </g>
+    <!-- Window -->
+    <rect x="510" y="40" width="190" height="150" fill="#a8d4e0" stroke="#1a3a5c" stroke-width="3"/>
+    <line x1="605" y1="40" x2="605" y2="190" stroke="#1a3a5c" stroke-width="2.5"/>
+    <line x1="510" y1="115" x2="700" y2="115" stroke="#1a3a5c" stroke-width="2.5"/>
+    <rect x="502" y="32" width="206" height="166" fill="none" stroke="#6b4423" stroke-width="4"/>
+    <circle cx="670" cy="70" r="15" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2"/>
+    <path d="M 525 95 Q 520 88 530 88 Q 535 80 545 85 Q 555 82 558 90 Q 565 92 560 100 L 535 100 Q 525 100 525 95 Z" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2"/>
+    <ellipse cx="560" cy="170" rx="22" ry="8" fill="#9cc38a" stroke="#1a3a5c" stroke-width="2"/>
+    <ellipse cx="640" cy="175" rx="18" ry="7" fill="#9cc38a" stroke="#1a3a5c" stroke-width="2"/>
+    <!-- Poster -->
+    <g transform="rotate(-3 105 115)">
+      <rect x="50" y="50" width="110" height="130" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <text x="105" y="85" text-anchor="middle" font-family="Gloria Hallelujah, cursive" font-size="16" fill="#d94c4c">FLY HUNT</text>
+      <text x="105" y="105" text-anchor="middle" font-family="Caveat, cursive" font-size="14" fill="#1a3a5c">the movie!</text>
+      <circle cx="105" cy="135" r="18" fill="#b5d49e" stroke="#1a3a5c" stroke-width="2"/>
+      <circle cx="100" cy="130" r="3" fill="#1a3a5c"/>
+      <circle cx="110" cy="130" r="3" fill="#1a3a5c"/>
+    </g>
+    <rect x="46" y="44" width="20" height="10" fill="#f2dc7e" opacity="0.7" stroke="#1a3a5c" stroke-width="0.8" transform="rotate(-33 56 49)"/>
+    <rect x="146" y="44" width="20" height="10" fill="#f2dc7e" opacity="0.7" stroke="#1a3a5c" stroke-width="0.8" transform="rotate(33 156 49)"/>
+    <!-- Fly trophy -->
+    <rect x="210" y="70" width="90" height="80" fill="#fffbe8" stroke="#6b4423" stroke-width="4"/>
+    <rect x="218" y="78" width="74" height="64" fill="#f4e8c8" stroke="#1a3a5c" stroke-width="1.5"/>
+    <ellipse cx="255" cy="110" rx="10" ry="6" fill="#1a3a5c"/>
+    <text x="255" y="138" text-anchor="middle" font-family="Caveat, cursive" font-size="10" fill="#1a3a5c">1st fly caught</text>
+    <!-- Bed -->
+    <rect x="40" y="270" width="280" height="90" fill="#c8a8d4" stroke="#1a3a5c" stroke-width="3"/>
+    <rect x="40" y="260" width="280" height="20" fill="#a88ab4" stroke="#1a3a5c" stroke-width="3"/>
+    <rect x="20" y="200" width="30" height="170" fill="#6b4423" stroke="#1a3a5c" stroke-width="3"/>
+    <rect x="310" y="240" width="30" height="130" fill="#6b4423" stroke="#1a3a5c" stroke-width="3"/>
+    <ellipse cx="100" cy="270" rx="50" ry="18" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+    <g stroke="#f2b3b3" stroke-width="2" fill="none" opacity="0.8">
+      <line x1="55" y1="295" x2="310" y2="295"/>
+      <line x1="55" y1="320" x2="310" y2="320"/>
+      <line x1="55" y1="345" x2="310" y2="345"/>
+    </g>
+    <!-- Desk -->
+    <rect x="390" y="260" width="180" height="12" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2.5"/>
+    <rect x="395" y="272" width="8" height="110" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2"/>
+    <rect x="557" y="272" width="8" height="110" fill="#a35c2a" stroke="#1a3a5c" stroke-width="2"/>
+    <path d="M 410 260 L 415 230 L 440 220 L 450 245 L 430 250 Z" fill="#f2dc7e" stroke="#1a3a5c" stroke-width="2.5"/>
+    <line x1="418" y1="260" x2="418" y2="245" stroke="#1a3a5c" stroke-width="2.5"/>
+    <circle cx="440" cy="240" r="4" fill="#fffbe8" stroke="#1a3a5c" stroke-width="1.5"/>
+    <rect x="470" y="244" width="50" height="8" fill="#d94c4c" stroke="#1a3a5c" stroke-width="2"/>
+    <rect x="473" y="236" width="48" height="8" fill="#9cc38a" stroke="#1a3a5c" stroke-width="2"/>
+    <rect x="476" y="228" width="46" height="8" fill="#a8c4e0" stroke="#1a3a5c" stroke-width="2"/>
+    <text x="498" y="250" text-anchor="middle" font-family="Caveat, cursive" font-size="9" fill="#fffbe8">POND LIFE</text>
+    <ellipse cx="540" cy="255" rx="12" ry="4" fill="#a35c2a" stroke="#1a3a5c" stroke-width="1.5"/>
+    <path d="M 528 255 L 530 245 L 550 245 L 552 255 Z" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2"/>
+    <path d="M 550 247 Q 556 249 555 254" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
+    <!-- Rug -->
+    <ellipse cx="400" cy="395" rx="150" ry="20" fill="#9cc38a" stroke="#1a3a5c" stroke-width="2.5" opacity="0.9"/>
+    <ellipse cx="400" cy="395" rx="120" ry="14" fill="none" stroke="#1a3a5c" stroke-width="1.2" opacity="0.5"/>
+    <ellipse cx="400" cy="395" rx="90" ry="8" fill="none" stroke="#1a3a5c" stroke-width="1" opacity="0.5"/>
+    <!-- Mr Frog sitting -->
+    <g id="sceneFrogGroup" transform="translate(155 190) scale(0.55)" style="cursor: pointer;">
+      <path d="M 20 120 Q 15 50 100 40 Q 185 50 180 120 Q 185 195 100 200 Q 15 195 20 120 Z" fill="#b5d49e" stroke="#1a3a5c" stroke-width="4"/>
+      <ellipse cx="100" cy="150" rx="45" ry="35" fill="#f4e8c8" stroke="#1a3a5c" stroke-width="2.5" opacity="0.85"/>
+      <circle cx="72" cy="35" r="24" fill="#b5d49e" stroke="#1a3a5c" stroke-width="3"/>
+      <circle cx="128" cy="35" r="24" fill="#b5d49e" stroke="#1a3a5c" stroke-width="3"/>
+      <circle cx="72" cy="40" r="16" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="128" cy="40" r="16" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <circle cx="76" cy="44" r="8" fill="#1a3a5c"/>
+      <circle cx="132" cy="44" r="8" fill="#1a3a5c"/>
+      <circle cx="79" cy="41" r="2.5" fill="#fffbe8"/>
+      <circle cx="135" cy="41" r="2.5" fill="#fffbe8"/>
+      <path d="M 70 110 Q 100 135 130 110" fill="none" stroke="#1a3a5c" stroke-width="3" stroke-linecap="round"/>
+      <rect x="75" y="160" width="50" height="30" fill="#fffbe8" stroke="#1a3a5c" stroke-width="2.5"/>
+      <line x1="100" y1="160" x2="100" y2="190" stroke="#1a3a5c" stroke-width="1.5"/>
+    </g>
+    <!-- Spider corner -->
+    <g transform="translate(740 40)">
+      <circle cx="0" cy="0" r="5" fill="#1a3a5c"/>
+      <line x1="0" y1="-5" x2="0" y2="-40" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="-4" y1="2" x2="-10" y2="8" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="4" y1="2" x2="10" y2="8" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="-4" y1="0" x2="-10" y2="0" stroke="#1a3a5c" stroke-width="1"/>
+      <line x1="4" y1="0" x2="10" y2="0" stroke="#1a3a5c" stroke-width="1"/>
+    </g>
+  </svg>`;
+}
+</script>
+
+<!-- =============== APP / NAV =============== -->
+<script>
+const pageStage = document.getElementById('pageStage');
+const navList = document.getElementById('navList');
+
+function renderNav() {
+  navList.innerHTML = PAGES.map((p, i) => `
+    <button class="nav-item ${state.page === p.id ? 'active' : ''}" data-nav="${p.id}">
+      <span class="idx">${i+1}.</span>${p.label}
+    </button>
+  `).join('');
+  navList.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => navigate(btn.dataset.nav));
+  });
+}
+
+function renderPage() {
+  let html;
+  switch (state.page) {
+    case 'home':    html = renderHome(); break;
+    case 'gallery': html = renderGallery(); break;
+    case 'frogs':   html = renderFrogs(); break;
+    case 'house':   html = renderHouse(); break;
+    case 'edit':    html = renderEdit(); break;
+    default:        html = renderHome();
+  }
+  pageStage.innerHTML = html;
+  pageStage.firstElementChild?.setAttribute('data-screen-label', `0${PAGES.findIndex(p=>p.id===state.page)+1 || 5} ${state.page}`);
+  attachHandlers();
+  notifySlide();
+}
+
+function navigate(id) {
+  if (state.page === id) return;
+  state.page = id;
+  localStorage.setItem('mrfrog_page_v2', id);
+  renderNav();
+  renderPage();
+}
+
+function navigateToEdit(frogId) {
+  state.editingId = frogId;
+  state.page = 'edit';
+  renderNav();
+  renderPage();
+}
+
+// Slide idx notify
+function notifySlide() {
+  const idx = PAGES.findIndex(p => p.id === state.page);
+  window.parent.postMessage({ slideIndexChanged: idx >= 0 ? idx : 0 }, '*');
+}
+
+// ========= HANDLERS =========
+function attachHandlers() {
+  // Stickers
+  document.querySelectorAll('.sticker').forEach(st => {
+    let startX, startY, originX, originY, dragging = false;
+    const getPos = () => {
+      const rect = st.getBoundingClientRect();
+      const parent = st.offsetParent.getBoundingClientRect();
+      return { x: rect.left - parent.left, y: rect.top - parent.top };
+    };
+    const onDown = (e) => {
+      e.preventDefault();
+      dragging = true;
+      st.classList.add('dragging');
+      const point = e.touches ? e.touches[0] : e;
+      startX = point.clientX; startY = point.clientY;
+      const p = getPos();
+      originX = p.x; originY = p.y;
+      st.style.top = originY + 'px';
+      st.style.left = originX + 'px';
+      st.style.right = 'auto';
+      st.style.bottom = 'auto';
+      popSound();
+    };
+    const onMove = (e) => {
+      if (!dragging) return;
+      const point = e.touches ? e.touches[0] : e;
+      const dx = point.clientX - startX;
+      const dy = point.clientY - startY;
+      st.style.left = (originX + dx) + 'px';
+      st.style.top = (originY + dy) + 'px';
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      st.classList.remove('dragging');
+    };
+    st.addEventListener('mousedown', onDown);
+    st.addEventListener('touchstart', onDown, { passive: false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+  });
+
+  // Home TOC
+  document.querySelectorAll('[data-go]').forEach(b => {
+    b.addEventListener('click', () => navigate(b.dataset.go));
+  });
+
+  // Home cover frog click
+  const coverFrog = document.getElementById('coverFrog');
+  if (coverFrog) {
+    coverFrog.addEventListener('click', (e) => {
+      ribbit();
+      coverFrog.classList.remove('bounce');
+      void coverFrog.offsetWidth;
+      coverFrog.classList.add('bounce');
+      spawnRibbitText(e.clientX, e.clientY);
+    });
+  }
+
+  // Easter egg on home
+  document.querySelectorAll('.egg-spot').forEach(egg => {
+    egg.addEventListener('click', spawnFly);
+  });
+
+  // Scene frog
+  const sceneFrog = document.getElementById('sceneFrogGroup');
+  if (sceneFrog) {
+    sceneFrog.addEventListener('click', (e) => {
+      ribbit();
+      spawnRibbitText(e.clientX, e.clientY);
+    });
+  }
+
+  // Frog cards -> open edit
+  document.querySelectorAll('.frog-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = parseInt(card.dataset.frogId, 10);
+      popSound();
+      navigateToEdit(id);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const id = parseInt(card.dataset.frogId, 10);
+        navigateToEdit(id);
+      }
+    });
+  });
+
+  // Outfit cards ribbit
+  document.querySelectorAll('.outfit-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      ribbit();
+      spawnRibbitText(e.clientX, e.clientY);
+    });
+  });
+
+  // Edit page handlers
+  if (state.page === 'edit') attachEditHandlers();
+}
+
+function attachEditHandlers() {
+  const frog = getFrog(state.editingId);
+  if (!frog) return;
+
+  document.getElementById('backBtn').addEventListener('click', () => navigate('frogs'));
+
+  // Chips
+  document.querySelectorAll('#editFields .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const f = chip.dataset.field;
+      const v = chip.dataset.val;
+      const multi = chip.dataset.multi;
+      if (multi) {
+        const set = new Set(frog.likes);
+        if (set.has(v)) set.delete(v); else set.add(v);
+        frog.likes = Array.from(set);
+        chip.classList.toggle('active');
+      } else {
+        frog[f] = v;
+        document.querySelectorAll(`#editFields .chip[data-field="${f}"]`).forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      }
+      saveFrogs();
+      updateEditPreview();
+      popSound();
+    });
+  });
+
+  // Name input
+  const nameInput = document.getElementById('nameInput');
+  nameInput.addEventListener('input', () => {
+    frog.name = nameInput.value;
+    saveFrogs();
+  });
+
+  // Notes
+  const notesInput = document.getElementById('notesInput');
+  notesInput.addEventListener('input', () => {
+    frog.notes = notesInput.value;
+    saveFrogs();
+  });
+
+  // Stars
+  document.querySelectorAll('#starsInput .star-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const n = parseInt(btn.dataset.star, 10);
+      frog.stars = n;
+      document.querySelectorAll('#starsInput .star-btn').forEach(b => {
+        const bn = parseInt(b.dataset.star, 10);
+        b.classList.toggle('on', bn <= n);
+      });
+      saveFrogs();
+      popSound();
+    });
+  });
+}
+
+function updateEditPreview() {
+  const frog = getFrog(state.editingId);
+  if (!frog) return;
+  document.getElementById('editPreview').innerHTML = frogSVG(frog, { size: 260 });
+}
+
+// ========= FX =========
+function spawnRibbitText(x, y) {
+  const words = ['ribbit!', 'RIBBIT', 'croak!', 'rib-rib!', '♪ ribbit ♪'];
+  const el = document.createElement('div');
+  el.className = 'ribbit-pop';
+  el.textContent = words[Math.floor(Math.random() * words.length)];
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+function spawnFly() {
+  if (document.querySelector('.fly')) return;
+  const fly = document.createElement('div');
+  fly.className = 'fly';
+  fly.innerHTML = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+    <ellipse cx="20" cy="22" rx="6" ry="8" fill="#1a3a5c" stroke="#1a3a5c" stroke-width="1.5"/>
+    <circle cx="17" cy="18" r="1.5" fill="#fffbe8"/>
+    <circle cx="23" cy="18" r="1.5" fill="#fffbe8"/>
+    <ellipse cx="13" cy="20" rx="5" ry="7" fill="#a8c4e0" opacity="0.6" stroke="#1a3a5c" stroke-width="1"/>
+    <ellipse cx="27" cy="20" rx="5" ry="7" fill="#a8c4e0" opacity="0.6" stroke="#1a3a5c" stroke-width="1"/>
+  </svg>`;
+  document.body.appendChild(fly);
+  let t = 0;
+  let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  let tx = cx, ty = cy;
+  function tick() {
+    if (!fly.isConnected) return;
+    t += 0.02;
+    if (Math.random() < 0.02) {
+      tx = 120 + Math.random() * (window.innerWidth - 200);
+      ty = 80 + Math.random() * (window.innerHeight - 160);
+    }
+    cx += (tx - cx) * 0.03 + Math.sin(t * 15) * 2;
+    cy += (ty - cy) * 0.03 + Math.cos(t * 12) * 2;
+    fly.style.left = cx + 'px';
+    fly.style.top = cy + 'px';
+    requestAnimationFrame(tick);
+  }
+  tick();
+  fly.addEventListener('click', () => {
+    ribbit();
+    const caught = document.createElement('div');
+    caught.className = 'ribbit-pop';
+    caught.textContent = 'GOT IT!';
+    caught.style.left = fly.style.left;
+    caught.style.top = fly.style.top;
+    caught.style.color = '#d94c4c';
+    document.body.appendChild(caught);
+    setTimeout(() => caught.remove(), 1000);
+    fly.remove();
+  });
+}
+
+// Hide hint
+setTimeout(() => {
+  const h = document.getElementById('hint');
+  if (h) { h.classList.add('fade'); setTimeout(() => h.remove(), 700); }
+}, 6500);
+
+// Init
+renderNav();
+renderPage();
+document.addEventListener('click', () => ensureAudio(), { once: true });
+</script>
+
+</body>
+</html>
