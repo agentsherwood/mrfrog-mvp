@@ -167,12 +167,9 @@ export default function Sprites() {
 
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 text-center">
-          <p className="tilt-l text-xs uppercase tracking-[0.3em] text-pencil">
-            section two
-          </p>
           <h2 className="mt-1 text-3xl text-ink sm:text-5xl">Mr Frog&rsquo;s world</h2>
           <p className="mx-auto mt-1 max-w-xl text-sm text-ink-soft sm:text-base">
-            Tap anyone. Poses react to their name.
+            Tap anyone.
           </p>
         </header>
 

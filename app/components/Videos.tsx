@@ -9,10 +9,12 @@ function Clip({
   src,
   title,
   caption,
+  tilt,
 }: {
   src: string;
   title: string;
   caption: string;
+  tilt: string;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
 
@@ -41,7 +43,7 @@ function Clip({
   }, []);
 
   return (
-    <figure className="paper-card tilt-l overflow-hidden rounded-xl">
+    <figure className={`paper-card ${tilt} overflow-hidden rounded-xl`}>
       <video
         ref={ref}
         src={src}
@@ -85,19 +87,21 @@ export default function Videos() {
 
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 text-center">
-          <p className="tilt-r text-xs uppercase tracking-[0.3em] text-pencil">
-            section three
-          </p>
           <h2 className="mt-1 text-3xl text-ink sm:text-5xl">Videos</h2>
           <p className="mx-auto mt-1 max-w-xl text-sm text-ink-soft sm:text-base">
-            Early experiments. Sound off.
+            Early experiments &mdash; warning: sound on.
           </p>
         </header>
 
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {clips.map((c) => (
+          {clips.map((c, i) => (
             <li key={c.file}>
-              <Clip src={c.file} title={c.title} caption={c.caption} />
+              <Clip
+                src={c.file}
+                title={c.title}
+                caption={c.caption}
+                tilt={i % 2 === 0 ? "tilt-l" : "tilt-r"}
+              />
             </li>
           ))}
         </ul>

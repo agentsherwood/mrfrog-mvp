@@ -13,7 +13,7 @@ export default function VideosPage() {
       <PageNav />
       <Videos />
       <footer className="px-6 py-6 text-center text-xs text-pencil">
-        <p>Early experiments. Sound off.</p>
+        <p>Hit play and unmute &mdash; fair warning, the sound is on.</p>
       </footer>
     </main>
   );

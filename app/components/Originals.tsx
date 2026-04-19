@@ -187,7 +187,7 @@ export default function Originals() {
             Amelia&rsquo;s drawings
           </h2>
           <p className="mx-auto mt-1 max-w-xl text-sm text-ink-soft sm:text-base">
-            Story arcs first, then the rest of the notebook. Tap anything to zoom.
+            Tap anything to zoom.
           </p>
         </header>
 
