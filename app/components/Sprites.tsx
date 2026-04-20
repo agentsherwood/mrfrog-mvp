@@ -4,10 +4,17 @@ import Image from "next/image";
 import { useState } from "react";
 
 import {
+  animals,
+  celebration,
   characterSheet,
-  items,
+  emotion,
+  everyday,
+  farm,
   mrsFrog,
+  nature,
   poses,
+  teddies,
+  vehicles,
   type Sprite,
   type SpriteGroup,
 } from "../data/sprites";
@@ -133,13 +140,65 @@ const poseSays: Record<string, string> = {
   cry: "waaaah",
 };
 
-const itemSays: Record<string, string> = {
+const everydaySays: Record<string, string> = {
   "tomato Bob": "I love you bob",
-  cake: "make a wish",
-  rainbow: "la la tooloo eee",
-  "washing machine": "splish",
   radio: "shakira shakira",
+  washer: "splish",
+};
+
+const natureSays: Record<string, string> = {
   "lily pad": "ribbit",
+  rainbow: "la la tooloo eee",
+};
+
+const celebrationSays: Record<string, string> = {
+  cake: "make a wish",
+  "12": "Amelia!",
+  balloons: "hold tight",
+};
+
+const animalSays: Record<string, string> = {
+  cow: "moo",
+  pig: "oink",
+  sheep: "baa",
+  "fluffy sheep": "baa baa",
+  rooster: "cock-a-doodle",
+  chicken: "cluck",
+  horse: "neigh",
+  goat: "meh",
+  duck: "quack",
+  dog: "woof",
+  cat: "meow",
+  chick: "peep",
+  mouse: "squeak",
+};
+
+const vehicleSays: Record<string, string> = {
+  "red car": "beep beep",
+  taxi: "where to?",
+  bus: "all aboard",
+  "fire engine": "nee naw",
+  "ice cream": "dingly ding",
+  police: "woop woop",
+  scooter: "brrrr",
+  bicycle: "ding ding",
+};
+
+const farmSays: Record<string, string> = {
+  "red tractor": "chug chug",
+  loader: "scoopy",
+  "small tractor": "putter",
+  "watering can": "splish splish",
+};
+
+const teddySays: Record<string, string> = {
+  "brown bear": "hug me",
+  panda: "bamboo please",
+  bunny: "hop",
+  pyjamas: "bedtime",
+  sleepy: "zzzz",
+  "big sleeping": "shhh",
+  patched: "still here",
 };
 
 export default function Sprites() {
@@ -190,10 +249,51 @@ export default function Sprites() {
           size={100}
         />
         <SpriteRow
-          group={items}
-          cols="grid-cols-4 sm:grid-cols-8"
+          group={nature}
+          cols="grid-cols-4 sm:grid-cols-6 lg:grid-cols-12"
           size={80}
-          sayMap={itemSays}
+          sayMap={natureSays}
+        />
+        <SpriteRow
+          group={everyday}
+          cols="grid-cols-4 sm:grid-cols-6 lg:grid-cols-12"
+          size={80}
+          sayMap={everydaySays}
+        />
+        <SpriteRow
+          group={emotion}
+          cols="grid-cols-4 sm:grid-cols-6 lg:grid-cols-12"
+          size={70}
+        />
+        <SpriteRow
+          group={celebration}
+          cols="grid-cols-4 sm:grid-cols-6 lg:grid-cols-12"
+          size={80}
+          sayMap={celebrationSays}
+        />
+        <SpriteRow
+          group={animals}
+          cols="grid-cols-3 sm:grid-cols-5 lg:grid-cols-7"
+          size={100}
+          sayMap={animalSays}
+        />
+        <SpriteRow
+          group={vehicles}
+          cols="grid-cols-3 sm:grid-cols-4 lg:grid-cols-6"
+          size={100}
+          sayMap={vehicleSays}
+        />
+        <SpriteRow
+          group={farm}
+          cols="grid-cols-3 sm:grid-cols-5 lg:grid-cols-7"
+          size={100}
+          sayMap={farmSays}
+        />
+        <SpriteRow
+          group={teddies}
+          cols="grid-cols-3 sm:grid-cols-5 lg:grid-cols-7"
+          size={100}
+          sayMap={teddySays}
         />
       </div>
     </section>
