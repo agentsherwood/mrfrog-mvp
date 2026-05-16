@@ -131,7 +131,15 @@ export class SplashScene extends Phaser.Scene {
     }
 
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 44, "tap sides to move · arrows or A/D on desktop", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 48, "tap sides to move · arrows or A/D on desktop", {
+        fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+        fontSize: "12px",
+        color: "#6c4b1c",
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 28, "go off one side and you pop back on the other!", {
         fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
         fontSize: "12px",
         color: "#6c4b1c",

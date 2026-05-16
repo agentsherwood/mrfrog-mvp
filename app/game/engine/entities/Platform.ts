@@ -35,14 +35,15 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
     const scale = spec.displayWidth / naturalW;
     this.setScale(scale);
 
-    this.driftAmplitude = kind === "moving" ? Phaser.Math.Between(50, 100) : 0;
-    this.driftSpeed = kind === "moving" ? Phaser.Math.FloatBetween(1.2, 2.0) : 0;
+    this.driftAmplitude = kind === "moving" ? Phaser.Math.Between(28, 58) : 0;
+    this.driftSpeed = kind === "moving" ? Phaser.Math.FloatBetween(0.8, 1.3) : 0;
     this.driftCenter = x;
     this.driftPhase = Phaser.Math.FloatBetween(0, Math.PI * 2);
 
-    // Thin collision strip near the top of the visual.
+    // Thin collision strip near the top of the visual. Generous width so
+    // near-misses still land — landings should feel forgiving.
     const body = this.body as Phaser.Physics.Arcade.StaticBody;
-    const bodyW = this.displayWidth * 0.78;
+    const bodyW = this.displayWidth * 0.9;
     const bodyH = PLATFORM.height;
     const topOfSprite = this.y - this.displayHeight / 2;
     const bodyYCenter = topOfSprite + bodyH / 2 + this.displayHeight * 0.1;

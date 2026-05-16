@@ -40,11 +40,12 @@ export class Acorn extends Phaser.Physics.Arcade.Sprite {
     const isRaindrop = spec.key === ENV_ASSETS.raindrops.key;
     body.setVelocityY(
       isRaindrop
-        ? Phaser.Math.Between(130, 190)
-        : Phaser.Math.Between(80, 140),
+        ? Phaser.Math.Between(105, 150)
+        : Phaser.Math.Between(70, 105),
     );
-    // Mild horizontal drift — some wander, not chaos.
-    body.setVelocityX(Phaser.Math.FloatBetween(-25, 25));
+    // Mild horizontal drift — some wander, not chaos. Kept gentle so
+    // hazards stay dodgeable.
+    body.setVelocityX(Phaser.Math.FloatBetween(-18, 18));
 
     scene.tweens.add({
       targets: this,

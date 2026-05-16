@@ -1,5 +1,12 @@
 import * as Phaser from "phaser";
-import { GAME_HEIGHT, GAME_WIDTH, PHYSICS, SCENES } from "../config/game";
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  INVULN_MS,
+  PHYSICS,
+  SCENES,
+  STARTING_LIVES,
+} from "../config/game";
 import {
   BIRTHDAY_ASSETS,
   EMOTION_ASSETS,
@@ -55,6 +62,10 @@ export class GameScene extends Phaser.Scene {
   private collectibleTimer?: Phaser.Time.TimerEvent;
   private shownTwelveBanner = false;
   private droppedTwelveBonus = false;
+  private lives = STARTING_LIVES;
+  private invulnerable = false;
+  private heartIcons: Phaser.GameObjects.Image[] = [];
+  private blinkTween?: Phaser.Tweens.Tween;
 
   constructor() {
     super(SCENES.game);
@@ -69,6 +80,10 @@ export class GameScene extends Phaser.Scene {
     this.deathReason = "fell";
     this.shownTwelveBanner = false;
     this.droppedTwelveBonus = false;
+    this.lives = STARTING_LIVES;
+    this.invulnerable = false;
+    this.heartIcons = [];
+    this.blinkTween = undefined;
 
     this.bgFar = this.add
       .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, TEXTURE_KEYS.background)
@@ -135,11 +150,11 @@ export class GameScene extends Phaser.Scene {
       this.player,
       this.hazards,
       (_p, obj) => {
-        if (this.dying) return;
+        if (this.dying || this.invulnerable) return;
         const hazard = obj as Acorn;
         this.spawnHitPoof(hazard.x, hazard.y);
         hazard.destroy();
-        this.beginDeath("hit");
+        this.onHazardHit();
       },
     );
 
@@ -220,6 +235,35 @@ export class GameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(20)
       .setAlpha(0);
+
+    this.setupHearts();
+  }
+
+  // Row of heart icons showing lives remaining. Lost hearts pop out.
+  private setupHearts(): void {
+    this.heartIcons = [];
+    for (let i = 0; i < STARTING_LIVES; i++) {
+      const heart = this.add
+        .image(22 + i * 26, 90, EMOTION_ASSETS.heartBurst.key)
+        .setScrollFactor(0)
+        .setDepth(20);
+      heart.setScale(22 / (heart.width || 22));
+      this.heartIcons.push(heart);
+    }
+  }
+
+  private refreshHearts(): void {
+    this.heartIcons.forEach((heart, i) => {
+      if (i < this.lives || heart.alpha === 0) return;
+      this.tweens.add({
+        targets: heart,
+        alpha: 0,
+        scale: heart.scale * 1.8,
+        angle: 40,
+        duration: 320,
+        ease: "Quad.easeOut",
+      });
+    });
   }
 
   override update(): void {
@@ -332,14 +376,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   private scheduleHazards(): void {
-    // Sparse spawn — given how long each hazard lingers, 2.4s keeps the
-    // sky busy but not swarming.
+    // Sparse spawn — hazards only start after the player has found their
+    // feet (score 150), then drop every 3s so the sky never swarms.
     this.hazardTimer = this.time.addEvent({
-      delay: 2400,
+      delay: 3000,
       loop: true,
       callback: () => {
         if (this.dying) return;
-        if (this.score < 80) return;
+        if (this.score < 150) return;
         this.dropHazard();
       },
     });
@@ -476,9 +520,41 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // A hazard touched Mr Frog. Costs a life; only the life-zero hit ends the
+  // run. Survivable hits give a recovery hop and a brief invulnerability.
+  private onHazardHit(): void {
+    this.lives -= 1;
+    this.refreshHearts();
+    if (this.lives <= 0) {
+      this.beginDeath("hit");
+      return;
+    }
+    this.invulnerable = true;
+    this.player.setVelocityY(PHYSICS.jumpVelocity);
+    if (!this.reducedMotion) this.cameras.main.shake(120, 0.004);
+    this.flashBanner("ouch!");
+    this.blinkTween?.stop();
+    this.blinkTween = this.tweens.add({
+      targets: this.player,
+      alpha: { from: 1, to: 0.3 },
+      duration: 130,
+      yoyo: true,
+      repeat: -1,
+    });
+    this.time.delayedCall(INVULN_MS, () => {
+      this.blinkTween?.stop();
+      this.blinkTween = undefined;
+      this.player.setAlpha(1);
+      this.invulnerable = false;
+    });
+  }
+
   private beginDeath(reason: "fell" | "hit"): void {
     if (this.dying) return;
     this.dying = true;
+    this.blinkTween?.stop();
+    this.blinkTween = undefined;
+    this.player.setAlpha(1);
     this.deathReason = reason;
     this.hazardTimer?.remove(false);
     this.collectibleTimer?.remove(false);

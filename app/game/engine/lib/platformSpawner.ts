@@ -7,6 +7,9 @@ export class PlatformSpawner {
   private readonly group: Phaser.Physics.Arcade.StaticGroup;
   private nextSpawnY: number;
   private readonly initialHighestY: number;
+  // X of the last platform spawned — the next one is placed within a
+  // jumpable horizontal step of it so every gap is reachable.
+  private lastSpawnX: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -17,6 +20,7 @@ export class PlatformSpawner {
     this.group = group;
     this.nextSpawnY = startY;
     this.initialHighestY = startY;
+    this.lastSpawnX = GAME_WIDTH / 2;
   }
 
   ensureCovered(targetY: number, heightClimbed: number): void {
@@ -35,28 +39,34 @@ export class PlatformSpawner {
   }
 
   private spawnOne(heightClimbed: number): void {
-    const gap = Phaser.Math.Between(100, 160);
+    const gap = Phaser.Math.Between(PLATFORM.minGapY, PLATFORM.maxGapY);
     const spawnY = this.nextSpawnY - gap;
-    const spawnX = Phaser.Math.Between(
-      PLATFORM.marginX + PLATFORM.width / 2,
-      GAME_WIDTH - PLATFORM.marginX - PLATFORM.width / 2,
-    );
+
+    const minX = PLATFORM.marginX + PLATFORM.width / 2;
+    const maxX = GAME_WIDTH - PLATFORM.marginX - PLATFORM.width / 2;
+    // Place within a jumpable step of the previous platform — never
+    // pure-random across the full width, which produced unreachable gaps.
+    const step = Phaser.Math.Between(-PLATFORM.maxStepX, PLATFORM.maxStepX);
+    const spawnX = Phaser.Math.Clamp(this.lastSpawnX + step, minX, maxX);
+
     const kind = this.pickKind(spawnY, heightClimbed);
     const platform = new Platform(this.scene, spawnX, spawnY, kind);
     this.group.add(platform);
     this.nextSpawnY = spawnY;
+    this.lastSpawnX = spawnX;
   }
 
   private pickKind(spawnY: number, heightClimbed: number): PlatformKind {
-    // Opening stretch is all static so the first jumps are reliable.
-    if (spawnY > this.initialHighestY - 280) return "static";
+    // Long all-static opening so the first climbs are reliable.
+    if (spawnY > this.initialHighestY - 420) return "static";
 
-    const difficulty = Phaser.Math.Clamp(heightClimbed / 4000, 0, 1);
+    const difficulty = Phaser.Math.Clamp(heightClimbed / 6000, 0, 1);
     const roll = Math.random();
 
-    // Flower pads are the rare high-value platform.
-    const flowerChance = 0.06 + difficulty * 0.05;
-    const movingChance = 0.12 + difficulty * 0.25;
+    // Flower pads are the rare high-value platform. Moving pads are the
+    // hardest landing, so they ramp in gently and stay a minority.
+    const flowerChance = 0.06 + difficulty * 0.04;
+    const movingChance = 0.08 + difficulty * 0.14;
 
     if (roll < flowerChance) return "flower";
     if (roll < flowerChance + movingChance) return "moving";
