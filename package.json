@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "collection:gen": "tsx scripts/generate-collection.ts",
+    "collection:layers": "../../../.venv/bin/python3 scripts/gen-placeholder-layers.py"
   },
   "dependencies": {
     "next": "16.2.4",
@@ -22,6 +24,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
+    "tsx": "^4.22.0",
     "typescript": "^5"
   }
 }
