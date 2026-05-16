@@ -14,6 +14,7 @@ const TEX = {
   sideRock: "tex-side-rock",
   acorn: "tex-acorn",
   splashRing: "tex-splash-ring",
+  badge: "tex-badge",
 } as const;
 
 export const TEXTURE_KEYS = TEX;
@@ -49,6 +50,7 @@ export function ensureRuntimeTextures(scene: Phaser.Scene): void {
   if (!tex.exists(TEX.sideRock)) drawSideReeds(scene, TEX.sideRock);
   if (!tex.exists(TEX.acorn)) drawAcorn(scene, TEX.acorn);
   if (!tex.exists(TEX.splashRing)) drawSplashRing(scene, TEX.splashRing);
+  if (!tex.exists(TEX.badge)) drawBadge(scene, TEX.badge);
 }
 
 function drawPlayer(scene: Phaser.Scene, key: string, sad: boolean): void {
@@ -413,6 +415,41 @@ function drawSplashRing(scene: Phaser.Scene, key: string): void {
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
   g.lineStyle(4, RULE_BLUE, 1);
   g.strokeCircle(d / 2, d / 2, d / 2 - 3);
+  g.generateTexture(key, d, d);
+  g.destroy();
+}
+
+// A blank hand-drawn medal disc. Drawn cream so it tints cleanly to bronze /
+// silver / gold per badge tier; the score number is layered on at use-site.
+function drawBadge(scene: Phaser.Scene, key: string): void {
+  const d = 72;
+  const c = d / 2;
+  const g = scene.make.graphics({ x: 0, y: 0 }, false);
+
+  // Soft pencil shadow.
+  g.fillStyle(0x000000, 0.14);
+  g.fillCircle(c + 2, c + 3, c - 6);
+
+  // Cream disc — tinting this at use-site recolours the whole medal.
+  g.fillStyle(CLOUD_WHITE, 1);
+  g.fillCircle(c, c, c - 6);
+  g.lineStyle(3, INK_DARK, 1);
+  g.strokeCircle(c, c, c - 6);
+
+  // Inner ring.
+  g.lineStyle(1.6, INK_DARK, 0.4);
+  g.strokeCircle(c, c, c - 14);
+
+  // Scalloped edge ticks for a medal feel.
+  g.lineStyle(2, INK_DARK, 0.5);
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    g.beginPath();
+    g.moveTo(c + Math.cos(a) * (c - 6), c + Math.sin(a) * (c - 6));
+    g.lineTo(c + Math.cos(a) * (c - 11), c + Math.sin(a) * (c - 11));
+    g.strokePath();
+  }
+
   g.generateTexture(key, d, d);
   g.destroy();
 }

@@ -6,6 +6,7 @@ import {
   PLAYER_ASSETS,
 } from "../config/assets";
 import { ensureRuntimeTextures, TEXTURE_KEYS } from "../lib/textures";
+import { BADGE_LOCKED_TINT, BADGE_TEXTURE, BADGE_TIERS } from "../lib/badges";
 import { loadHighScore } from "../lib/score";
 
 export class SplashScene extends Phaser.Scene {
@@ -130,6 +131,8 @@ export class SplashScene extends Phaser.Scene {
         .setOrigin(0.5);
     }
 
+    this.renderBadgeShelf(high);
+
     this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 48, "tap sides to move · arrows or A/D on desktop", {
         fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
@@ -149,5 +152,48 @@ export class SplashScene extends Phaser.Scene {
     const start = () => this.scene.start(SCENES.game);
     this.input.once("pointerdown", start);
     this.input.keyboard?.once("keydown", start);
+  }
+
+  // Trophy shelf shown on the title screen — earned badges in colour, locked
+  // ones as faint ghosts so the player can see what's left to chase.
+  private renderBadgeShelf(high: number): void {
+    this.add
+      .text(GAME_WIDTH / 2, 430, "badges", {
+        fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+        fontSize: "14px",
+        color: "#6c4b1c",
+      })
+      .setOrigin(0.5);
+
+    BADGE_TIERS.forEach((tier, i) => {
+      const x = GAME_WIDTH / 2 + (i - 1) * 70;
+      const earned = high >= tier.score;
+
+      const medal = this.add.image(x, 462, BADGE_TEXTURE);
+      medal.setScale(46 / (medal.width || 46));
+      medal.setTint(earned ? tier.tint : BADGE_LOCKED_TINT);
+      medal.setAlpha(earned ? 1 : 0.16);
+
+      this.add
+        .text(x, 462, tier.label, {
+          fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+          fontSize: "12px",
+          color: earned ? "#2a1f14" : "#9a8c70",
+          stroke: "#f6ecd4",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
+
+      if (earned) {
+        this.tweens.add({
+          targets: medal,
+          angle: { from: -5, to: 5 },
+          yoyo: true,
+          repeat: -1,
+          duration: 1600,
+          ease: "Sine.easeInOut",
+        });
+      }
+    });
   }
 }

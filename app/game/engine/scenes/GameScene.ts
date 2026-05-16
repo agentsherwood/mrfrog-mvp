@@ -13,6 +13,7 @@ import {
   ENV_ASSETS,
 } from "../config/assets";
 import { ensureRuntimeTextures, TEXTURE_KEYS } from "../lib/textures";
+import { BADGE_TEXTURE, BADGE_TIERS, type BadgeTier } from "../lib/badges";
 import { Player } from "../entities/Player";
 import { Platform } from "../entities/Platform";
 import { Acorn } from "../entities/Acorn";
@@ -66,6 +67,7 @@ export class GameScene extends Phaser.Scene {
   private invulnerable = false;
   private heartIcons: Phaser.GameObjects.Image[] = [];
   private blinkTween?: Phaser.Tweens.Tween;
+  private celebratedTiers = new Set<number>();
 
   constructor() {
     super(SCENES.game);
@@ -84,6 +86,7 @@ export class GameScene extends Phaser.Scene {
     this.invulnerable = false;
     this.heartIcons = [];
     this.blinkTween = undefined;
+    this.celebratedTiers.clear();
 
     this.bgFar = this.add
       .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, TEXTURE_KEYS.background)
@@ -293,6 +296,7 @@ export class GameScene extends Phaser.Scene {
       this.scoreText.setText(String(this.score));
       this.maybeBeatHighScore();
       this.maybeShowTwelveBanner();
+      this.maybeAwardBadge();
     }
 
     if (!this.dying) {
@@ -360,6 +364,62 @@ export class GameScene extends Phaser.Scene {
       const item = new Collectible(this, x, cam.scrollY - 40, "number12");
       this.collectibles.add(item);
     }
+  }
+
+  // Fire a one-off celebration when the score crosses a badge threshold the
+  // player didn't already hold. Tiers are ascending, so stop at the first
+  // one not yet reached.
+  private maybeAwardBadge(): void {
+    for (const tier of BADGE_TIERS) {
+      if (this.score < tier.score) break;
+      if (this.celebratedTiers.has(tier.score)) continue;
+      this.celebratedTiers.add(tier.score);
+      if (this.highScore >= tier.score) continue;
+      this.celebrateBadge(tier);
+    }
+  }
+
+  private celebrateBadge(tier: BadgeTier): void {
+    const cam = this.cameras.main;
+    const badge = this.add
+      .image(GAME_WIDTH / 2, 250, BADGE_TEXTURE)
+      .setScrollFactor(0)
+      .setDepth(21)
+      .setTint(tier.tint)
+      .setAlpha(0);
+    const baseScale = 120 / (badge.width || 120);
+    const num = this.add
+      .text(GAME_WIDTH / 2, 250, tier.label, {
+        fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+        fontSize: "24px",
+        color: "#2a1f14",
+        stroke: "#f6ecd4",
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(22)
+      .setAlpha(0);
+    this.tweens.add({
+      targets: badge,
+      alpha: 1,
+      scale: { from: baseScale * 0.3, to: baseScale },
+      duration: 460,
+      ease: "Back.easeOut",
+    });
+    this.tweens.add({ targets: num, alpha: 1, duration: 460 });
+    this.tweens.add({
+      targets: [badge, num],
+      alpha: 0,
+      delay: 1500,
+      duration: 700,
+      onComplete: () => {
+        badge.destroy();
+        num.destroy();
+      },
+    });
+    this.flashBanner(`${tier.name} badge!`);
+    this.spawnSparkles(GAME_WIDTH / 2, cam.scrollY + 250, 8);
   }
 
   private flashBanner(text: string): void {
@@ -595,11 +655,16 @@ export class GameScene extends Phaser.Scene {
     const newRecord = this.score > this.highScore;
     const finalHigh = Math.max(this.highScore, this.score);
     if (newRecord) saveHighScore(finalHigh);
+    // Badges crossed for the first time this run.
+    const newBadges = BADGE_TIERS.filter(
+      (t) => finalHigh >= t.score && this.highScore < t.score,
+    ).map((t) => t.score);
     const data: GameOverData = {
       score: this.score,
       highScore: finalHigh,
       newRecord,
       reason: this.deathReason,
+      newBadges,
     };
     this.scene.start(SCENES.gameOver, data);
   }

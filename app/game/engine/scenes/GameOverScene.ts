@@ -6,12 +6,14 @@ import {
   PLAYER_ASSETS,
 } from "../config/assets";
 import { ensureRuntimeTextures, TEXTURE_KEYS } from "../lib/textures";
+import { BADGE_LOCKED_TINT, BADGE_TEXTURE, BADGE_TIERS } from "../lib/badges";
 
 export type GameOverData = {
   score: number;
   highScore: number;
   newRecord: boolean;
   reason: "fell" | "hit";
+  newBadges: number[];
 };
 
 export class GameOverScene extends Phaser.Scene {
@@ -124,7 +126,7 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     const hint = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 120, "tap or any key to jump again", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 150, "tap or any key to jump again", {
         fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
         fontSize: "18px",
         color: "#2a1f14",
@@ -138,10 +140,67 @@ export class GameOverScene extends Phaser.Scene {
       repeat: -1,
     });
 
+    this.renderBadges(data);
+
     const restart = () => this.scene.start(SCENES.game);
     this.time.delayedCall(320, () => {
       this.input.once("pointerdown", restart);
       this.input.keyboard?.once("keydown", restart);
+    });
+  }
+
+  // Trophy shelf: earned badges show in tier colour, locked ones as faint
+  // ghosts. A badge earned this run pulses with a "new!" tag.
+  private renderBadges(data: GameOverData): void {
+    const rowY = GAME_HEIGHT - 74;
+    this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 112, "badges", {
+        fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+        fontSize: "15px",
+        color: "#6c4b1c",
+      })
+      .setOrigin(0.5);
+
+    BADGE_TIERS.forEach((tier, i) => {
+      const x = GAME_WIDTH / 2 + (i - 1) * 78;
+      const earned = data.highScore >= tier.score;
+      const isNew = data.newBadges.includes(tier.score);
+
+      const medal = this.add.image(x, rowY, BADGE_TEXTURE);
+      medal.setScale(56 / (medal.width || 56));
+      medal.setTint(earned ? tier.tint : BADGE_LOCKED_TINT);
+      medal.setAlpha(earned ? 1 : 0.16);
+
+      this.add
+        .text(x, rowY, tier.label, {
+          fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+          fontSize: "14px",
+          color: earned ? "#2a1f14" : "#9a8c70",
+          stroke: "#f6ecd4",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
+
+      if (isNew) {
+        const base = medal.scale;
+        this.tweens.add({
+          targets: medal,
+          scale: { from: base, to: base * 1.2 },
+          yoyo: true,
+          repeat: -1,
+          duration: 480,
+          ease: "Sine.easeInOut",
+        });
+        this.add
+          .text(x, rowY - 34, "new!", {
+            fontFamily: '"Comic Sans MS", "Chalkboard SE", sans-serif',
+            fontSize: "13px",
+            color: "#c84a4a",
+            stroke: "#f6ecd4",
+            strokeThickness: 3,
+          })
+          .setOrigin(0.5);
+      }
     });
   }
 }
