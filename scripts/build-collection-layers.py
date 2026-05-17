@@ -27,13 +27,23 @@ OUT = PUBLIC / "collection" / "layers"
 CANVAS = 1024
 
 # --- which layer groups are switched on (incremental build) ----------------
-PHASE = ["background", "frog"]
+PHASE = ["background", "frog", "headwear"]
 
-# --- canonical anchors (derived from the base plate) -----------------------
-HEAD_BOX = (300, 2, 724, 322)
-EYE_BOX = (286, 150, 738, 356)
-HAND_BOX = (96, 486, 452, 862)
-SHOE_BOX = (250, 836, 776, 1014)
+# --- canonical anchors (derived from the candidate-1 base plate) -----------
+# The raw canonical PNG fills the canvas right to y=0 — eye bumps touch the
+# top edge — so there's no room to stack a hat above. The build inserts a
+# top pad of FROG_TOP_PAD by scaling the canonical down to (CANVAS - PAD)
+# tall and centring horizontally. Every accessory layer references the
+# *post-pad* frog coordinates so anchors line up.
+FROG_TOP_PAD = 220
+FROG_INNER_H = CANVAS - FROG_TOP_PAD  # the height the canonical lives in
+
+HEAD_CROWN_Y = FROG_TOP_PAD + 40   # hat BOTTOM sits here — just into eye-bump tops
+HEAD_HAT_MAX_W = 620               # widest a hat can be
+HEAD_HAT_MAX_H = HEAD_CROWN_Y      # tallest a hat can be — extends UP to y=0
+EYE_BOX = (286, FROG_TOP_PAD + 100, 738, FROG_TOP_PAD + 270)
+HAND_BOX = (96, FROG_TOP_PAD + 380, 452, FROG_TOP_PAD + 680)
+SHOE_BOX = (250, FROG_TOP_PAD + 680, 776, CANVAS - 8)
 
 FROG_KEYS = ["none", "raincoat", "painter-smock", "chef-apron", "pyjamas",
              "tutu", "sailor", "strongman", "wedding-suit", "superhero",
@@ -90,6 +100,25 @@ def place_in_box(src: Path, box: tuple[int, int, int, int]) -> Image.Image:
     return canvas
 
 
+def place_on_head(src: Path) -> Image.Image:
+    """Place a hat so its BOTTOM sits at HEAD_CROWN_Y and it extends upward.
+
+    Hat is scaled to fit (max_w, max_h), preserving aspect ratio, then
+    centred horizontally on the canvas and anchored vertically so the brim
+    rests on the head-crown reference line.
+    """
+    art = trimmed(src)
+    scale = min(HEAD_HAT_MAX_W / art.width, HEAD_HAT_MAX_H / art.height)
+    new_w = max(1, round(art.width * scale))
+    new_h = max(1, round(art.height * scale))
+    art = art.resize((new_w, new_h), Image.LANCZOS)
+    canvas = blank()
+    x = (CANVAS - new_w) // 2
+    y = HEAD_CROWN_Y - new_h
+    canvas.alpha_composite(art, (x, y))
+    return canvas
+
+
 def place_background(src: Path) -> Image.Image:
     img = Image.open(src).convert("RGBA")
     scale = max(CANVAS / img.width, CANVAS / img.height)
@@ -103,8 +132,25 @@ def place_background(src: Path) -> Image.Image:
 
 
 def canonical_copy(src: Path) -> Image.Image:
+    """Place the canonical (or any outfit variant) below the FROG_TOP_PAD line.
+
+    The raw plate is scaled so its full height fits in CANVAS - FROG_TOP_PAD,
+    then centred horizontally and offset down by FROG_TOP_PAD. That gives
+    the accessory zone above the frog the room to hold a hat without
+    clipping at the canvas top edge.
+    """
     img = Image.open(src).convert("RGBA")
-    return img if img.size == (CANVAS, CANVAS) else img.resize((CANVAS, CANVAS), Image.LANCZOS)
+    if img.size != (CANVAS, CANVAS):
+        img = img.resize((CANVAS, CANVAS), Image.LANCZOS)
+    scale = FROG_INNER_H / CANVAS
+    new_w = max(1, round(CANVAS * scale))
+    new_h = max(1, round(CANVAS * scale))
+    inner = img.resize((new_w, new_h), Image.LANCZOS)
+    canvas = blank()
+    x = (CANVAS - new_w) // 2
+    y = FROG_TOP_PAD
+    canvas.alpha_composite(inner, (x, y))
+    return canvas
 
 
 def main() -> int:
@@ -138,7 +184,7 @@ def main() -> int:
         for key in HEADWEAR:
             src = RAW / "headwear" / f"{key}.png"
             if src.exists():
-                save(place_in_box(src, HEAD_BOX), "headwear", key)
+                save(place_on_head(src), "headwear", key)
                 built += 1
             else:
                 missing.append(f"headwear/{key}")
