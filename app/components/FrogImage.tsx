@@ -91,6 +91,7 @@ export default function FrogImage({
   const heldItem = traitValue("heldItem", traits.heldItem);
   const eyewear = traitValue("eyewear", traits.eyewear);
   const headwear = traitValue("headwear", traits.headwear);
+  const borderTrait = traitValue("border", traits.border);
   const finish = traitValue("finish", traits.finish);
 
   return (
@@ -112,6 +113,7 @@ export default function FrogImage({
         {eyewear?.layer && <Layer src={eyewear.layer} priority={priority} />}
         {headwear?.layer && <Layer src={headwear.layer} priority={priority} />}
       </div>
+      {borderTrait?.layer && <Layer src={borderTrait.layer} priority={priority} />}
       {showFinish && finish?.finishClass && (
         <div className={`fx-layer ${finish.finishClass}`} />
       )}

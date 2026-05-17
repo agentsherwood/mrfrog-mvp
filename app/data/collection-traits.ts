@@ -17,6 +17,7 @@ export type TraitCategoryId =
   | "eyewear"
   | "heldItem"
   | "shoes"
+  | "border"
   | "finish";
 
 export type TierKey =
@@ -67,6 +68,7 @@ const headwear = (k: string) => `${LAYER_BASE}/headwear/${k}.png`;
 const eyewear = (k: string) => `${LAYER_BASE}/eyewear/${k}.png`;
 const item = (k: string) => `${LAYER_BASE}/held-item/${k}.png`;
 const shoes = (k: string) => `${LAYER_BASE}/shoes/${k}.png`;
+const border = (k: string) => `${LAYER_BASE}/border/${k}.png`;
 
 export const TRAIT_CATEGORIES: TraitCategory[] = [
   {
@@ -207,10 +209,24 @@ export const TRAIT_CATEGORIES: TraitCategory[] = [
     ],
   },
   {
+    id: "border",
+    label: "Border",
+    render: "image",
+    z: 6,
+    layerDir: "border",
+    values: [
+      { key: "plain", label: "Plain", weight: 620 },
+      { key: "daisy-wreath", label: "Daisy Wreath", weight: 90, layer: border("daisy-wreath") },
+      { key: "leafy-vine", label: "Leafy Vine", weight: 70, layer: border("leafy-vine") },
+      { key: "stars", label: "Starry", weight: 50, layer: border("stars") },
+      { key: "rainbow-stripe", label: "Rainbow Stripe", weight: 30, layer: border("rainbow-stripe") },
+    ],
+  },
+  {
     id: "finish",
     label: "Finish",
     render: "overlay",
-    z: 6,
+    z: 7,
     values: [
       { key: "matte", label: "Matte", weight: 820 },
       { key: "shiny", label: "Shiny", weight: 100, finishClass: "fx-shiny" },
@@ -254,7 +270,7 @@ export const COLLECTION_SEED = 0x4d724672;
  * first value (none / matte / classic-green). COLLECTION_SIZE grows with the
  * phases — 50 while proving the loop, → 10,000 once every layer is switched on.
  */
-export const ACTIVE_CATEGORIES: TraitCategoryId[] = ["background", "frogColour", "outfit", "headwear", "shoes", "finish"];
+export const ACTIVE_CATEGORIES: TraitCategoryId[] = ["background", "frogColour", "outfit", "headwear", "shoes", "border", "finish"];
 export const COLLECTION_SIZE = 50;
 
 /** The five playful stats every frog carries. */
@@ -348,5 +364,6 @@ export const ROLL_ORDER: TraitCategoryId[] = [
   "eyewear",
   "heldItem",
   "shoes",
+  "border",
   "finish",
 ];

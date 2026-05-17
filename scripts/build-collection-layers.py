@@ -27,7 +27,7 @@ OUT = PUBLIC / "collection" / "layers"
 CANVAS = 1024
 
 # --- which layer groups are switched on (incremental build) ----------------
-PHASE = ["background", "frog", "headwear", "shoes"]
+PHASE = ["background", "frog", "headwear", "shoes", "border"]
 
 # --- canonical anchors (derived from the candidate-1 base plate) -----------
 # The raw canonical PNG fills the canvas right to y=0 — eye bumps touch the
@@ -110,6 +110,7 @@ HELD_GENERATED = ["butterfly-net", "barbell", "frog-plush", "magic-wand",
                   "diamond", "golden-acorn"]
 BACKGROUNDS = ["notebook", "pond", "farmyard", "sunset", "kitchen", "stage",
                "night-sky", "rainbow-rain", "underwater", "outer-space"]
+BORDERS = ["daisy-wreath", "leafy-vine", "stars", "rainbow-stripe"]
 HEADWEAR = ["party-hat", "beanie", "flower-crown", "chef-hat", "sailor-cap",
             "top-hat", "pirate-hat", "birthday-12",
             "astronaut-helmet", "crown"]
@@ -229,6 +230,15 @@ def place_background(src: Path) -> Image.Image:
     return flat
 
 
+def canonical_copy_full(src: Path) -> Image.Image:
+    """Borders / overlays that should fill the WHOLE tile — no FROG_TOP_PAD
+    shift. Just resize to 1024² if needed and return."""
+    img = Image.open(src).convert("RGBA")
+    if img.size != (CANVAS, CANVAS):
+        img = img.resize((CANVAS, CANVAS), Image.LANCZOS)
+    return img
+
+
 def canonical_copy(src: Path) -> Image.Image:
     """Place the canonical (or any outfit variant) below the FROG_TOP_PAD line.
 
@@ -304,6 +314,16 @@ def main() -> int:
                 built += 1
             else:
                 missing.append(f"shoes/{key}")
+
+    if "border" in PHASE:
+        for key in BORDERS:
+            src = RAW / "border" / f"{key}.png"
+            if src.exists():
+                # Borders are full-canvas overlays — fit to 1024² as-is.
+                save(canonical_copy_full(src), "border", key)
+                built += 1
+            else:
+                missing.append(f"border/{key}")
 
     if "held-item" in PHASE:
         for key, src in HELD_SPRITE.items():

@@ -81,6 +81,15 @@ OUTFIT_TEMPLATE = (
     "round body. Do NOT change his face, eyes, hands or feet. Keep the "
     "background fully transparent."
 )
+BORDER_TEMPLATE = (
+    "A SQUARE PICTURE FRAME — only the four EDGES of the square are drawn; "
+    "the CENTRE of the square is fully transparent and empty. {desc}. "
+    "{style} The frame should be roughly 1/10 of the canvas thick on each "
+    "edge. It must look DRAWN and flat — NOT a realistic object, NOT a 3D "
+    "render, NOT a photo. Absolutely NO content in the middle — just empty "
+    "transparent space (a character will be placed there later). The "
+    "background must be FULLY TRANSPARENT. No text, no labels. Square 1:1."
+)
 
 # --- catalogues (keys mirror app/data/collection-traits.ts) ----------------
 BACKGROUNDS = {
@@ -151,8 +160,16 @@ ITEMS = {
     "diamond": ("a big sparkly blue diamond gem", "diamond"),
     "golden-acorn": ("a shiny golden acorn", "acorn"),
 }
+BORDERS = {
+    # Picture-frame borders that wrap the four edges of the tile. Centre
+    # stays fully transparent so the frog and scene read through.
+    "daisy-wreath":  "a thin chain of small white-and-yellow daisies running all the way around the four edges, like a daisy chain wreath border",
+    "leafy-vine":    "a green leafy vine with small leaves winding all the way around the four edges, like a botanical frame",
+    "stars":         "scattered small five-point yellow and golden stars decorating all four edges, like a starry frame",
+    "rainbow-stripe": "a thin band of rainbow-coloured pencil stripes running all the way around the four edges as a frame",
+}
 
-GROUPS = ("backgrounds", "outfits", "headwear", "eyewear", "shoes", "items")
+GROUPS = ("backgrounds", "outfits", "headwear", "eyewear", "shoes", "items", "borders")
 
 
 # --- base plate ------------------------------------------------------------
@@ -276,6 +293,9 @@ def main() -> int:
     if "items" in groups:
         for k in ITEMS:
             targets.append(("items", k, "object", RAW / "held-item" / f"{k}.png"))
+    if "borders" in groups:
+        for k in BORDERS:
+            targets.append(("borders", k, "border", RAW / "border" / f"{k}.png"))
 
     if args.smoke:
         targets = [t for t in targets if t[1] in ("chef-apron", "star-glasses", "wellies")][:3]
@@ -299,6 +319,10 @@ def main() -> int:
             elif kind == "outfit":
                 data = gen_outfit(client, plate, mask,
                                   OUTFIT_TEMPLATE.format(desc=OUTFITS[key]), args.quality)
+            elif kind == "border":
+                data = base64.b64decode(gen_object(
+                    client, BORDER_TEMPLATE.format(desc=BORDERS[key], style=STYLE),
+                    args.quality))
             else:  # object
                 cat = {"headwear": HEADWEAR, "eyewear": EYEWEAR,
                        "shoes": SHOES, "items": ITEMS}[group]

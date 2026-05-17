@@ -14,6 +14,7 @@ export interface FrogTraits {
   eyewear: string;
   heldItem: string;
   shoes: string;
+  border: string;
   finish: string;
 }
 
