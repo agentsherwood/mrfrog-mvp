@@ -38,12 +38,39 @@ PHASE = ["background", "frog", "headwear"]
 FROG_TOP_PAD = 220
 FROG_INNER_H = CANVAS - FROG_TOP_PAD  # the height the canonical lives in
 
-HEAD_CROWN_Y = FROG_TOP_PAD + 40   # hat BOTTOM sits here — just into eye-bump tops
-HEAD_HAT_MAX_W = 620               # widest a hat can be
-HEAD_HAT_MAX_H = HEAD_CROWN_Y      # tallest a hat can be — extends UP to y=0
 EYE_BOX = (286, FROG_TOP_PAD + 100, 738, FROG_TOP_PAD + 270)
 HAND_BOX = (96, FROG_TOP_PAD + 380, 452, FROG_TOP_PAD + 680)
 SHOE_BOX = (250, FROG_TOP_PAD + 680, 776, CANVAS - 8)
+
+# Per-piece headwear placement, after a lot of visual iteration.
+# Frog anatomy after FROG_TOP_PAD=220:
+#   y=0..220   clear sky (the hat zone)
+#   y=220..360 eye bumps (front face has the smile-crescent eye drawings)
+#   y=360..540 head face / mouth
+#   y=540..760 body
+# Rules:
+#   - max_w / max_h are the largest the trimmed art may be (aspect preserved)
+#   - anchor_y is an offset FROM FROG_TOP_PAD: hat bottom sits at
+#     FROG_TOP_PAD + anchor_y, so anchor_y=40 puts the brim at canvas y=260
+#     (just above the eye bumps' front face)
+#   - dx is a horizontal nudge from canvas centre
+# Default intent: hat brim rests on the head crown, just above the eye
+# crescent drawings, with the hat extending UP. Exceptions: headphones
+# wrap around the head with the cups at "ear" level on the sides of the
+# face; the astronaut helmet swallows the whole head.
+HEADWEAR_PLACEMENT: dict[str, dict] = {
+    "party-hat":        {"max_w": 320, "max_h": 240, "anchor_y":  40, "dx": 0},
+    "beanie":           {"max_w": 420, "max_h": 240, "anchor_y":  40, "dx": 0},
+    "flower-crown":     {"max_w": 540, "max_h": 200, "anchor_y":  50, "dx": 0},
+    "chef-hat":         {"max_w": 360, "max_h": 280, "anchor_y":  40, "dx": 0},
+    "sailor-cap":       {"max_w": 460, "max_h": 220, "anchor_y":  70, "dx": 0},
+    "top-hat":          {"max_w": 440, "max_h": 300, "anchor_y":  40, "dx": 0},
+    "headphones":       {"max_w": 600, "max_h": 280, "anchor_y":  80, "dx": 0},
+    "pirate-hat":       {"max_w": 620, "max_h": 260, "anchor_y":  60, "dx": 0},
+    "birthday-12":      {"max_w": 360, "max_h": 280, "anchor_y":  40, "dx": 0},
+    "astronaut-helmet": {"max_w": 720, "max_h": 700, "anchor_y": 480, "dx": 0},
+    "crown":            {"max_w": 420, "max_h": 220, "anchor_y":  60, "dx": 0},
+}
 
 FROG_KEYS = ["none", "raincoat", "painter-smock", "chef-apron", "pyjamas",
              "tutu", "sailor", "strongman", "wedding-suit", "superhero",
@@ -100,21 +127,22 @@ def place_in_box(src: Path, box: tuple[int, int, int, int]) -> Image.Image:
     return canvas
 
 
-def place_on_head(src: Path) -> Image.Image:
-    """Place a hat so its BOTTOM sits at HEAD_CROWN_Y and it extends upward.
+def place_on_head(src: Path, key: str) -> Image.Image:
+    """Place a hat by its per-piece spec in HEADWEAR_PLACEMENT.
 
-    Hat is scaled to fit (max_w, max_h), preserving aspect ratio, then
-    centred horizontally on the canvas and anchored vertically so the brim
-    rests on the head-crown reference line.
+    Each hat sits with its BOTTOM at FROG_TOP_PAD + anchor_y, extending up.
+    max_w/max_h are the largest the trimmed art may be (aspect preserved).
+    dx shifts the hat horizontally from centre.
     """
+    spec = HEADWEAR_PLACEMENT[key]
     art = trimmed(src)
-    scale = min(HEAD_HAT_MAX_W / art.width, HEAD_HAT_MAX_H / art.height)
+    scale = min(spec["max_w"] / art.width, spec["max_h"] / art.height)
     new_w = max(1, round(art.width * scale))
     new_h = max(1, round(art.height * scale))
     art = art.resize((new_w, new_h), Image.LANCZOS)
     canvas = blank()
-    x = (CANVAS - new_w) // 2
-    y = HEAD_CROWN_Y - new_h
+    x = (CANVAS - new_w) // 2 + spec.get("dx", 0)
+    y = FROG_TOP_PAD + spec["anchor_y"] - new_h
     canvas.alpha_composite(art, (x, y))
     return canvas
 
@@ -184,7 +212,7 @@ def main() -> int:
         for key in HEADWEAR:
             src = RAW / "headwear" / f"{key}.png"
             if src.exists():
-                save(place_on_head(src), "headwear", key)
+                save(place_on_head(src, key), "headwear", key)
                 built += 1
             else:
                 missing.append(f"headwear/{key}")
