@@ -231,12 +231,15 @@ def place_background(src: Path) -> Image.Image:
 
 
 def canonical_copy_full(src: Path) -> Image.Image:
-    """Borders / overlays that should fill the WHOLE tile — no FROG_TOP_PAD
-    shift. Just resize to 1024² if needed and return."""
+    """Borders / overlays that should fill the WHOLE tile. Trim the
+    transparent padding from the source first, then resize the design to
+    fill the 1024² canvas — so a 'four-edges' frame actually touches the
+    four edges of the tile rather than sitting inset from them."""
     img = Image.open(src).convert("RGBA")
-    if img.size != (CANVAS, CANVAS):
-        img = img.resize((CANVAS, CANVAS), Image.LANCZOS)
-    return img
+    bb = img.getbbox()
+    if bb:
+        img = img.crop(bb)
+    return img.resize((CANVAS, CANVAS), Image.LANCZOS)
 
 
 def canonical_copy(src: Path) -> Image.Image:

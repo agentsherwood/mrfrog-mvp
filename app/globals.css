@@ -282,16 +282,16 @@ h3 {
   border-radius: inherit;
 }
 
-/* Shiny — clear gloss sweep across the card */
+/* Shiny — a subtle gloss sweep, mustn't obscure the frog */
 .fx-shiny::before {
   content: "";
   position: absolute;
   inset: -40%;
   background: linear-gradient(
     62deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.85) 50%,
-    transparent 60%
+    transparent 45%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 55%
   );
   animation: fx-sweep 3.2s linear infinite;
 }
