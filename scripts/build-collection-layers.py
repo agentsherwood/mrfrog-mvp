@@ -63,19 +63,20 @@ SHOE_BOX = (250, FROG_TOP_PAD + 680, 776, CANVAS - 8)
 # line sits just above that.
 FOOT_LINE_Y = 1018
 
-# Per-piece shoe placement. The frog's two stick feet splay outward and
-# span ~ 500 px at the toe line; values need width room so the shoe pair
-# lands ON the feet rather than between them. max_w / max_h are the
-# largest the trimmed art may be (aspect preserved); shoes anchor with
-# their BOTTOM at FOOT_LINE_Y, centred on the canvas.
+# Per-piece shoe placement. Shoes are now drawn top-down with toes
+# pointing toward the viewer (a pair side-by-side, foot openings at the
+# top of the image). Sized so the pair covers the frog's feet zone
+# without extending up into the body: width sits inside the foot-splay
+# span, height stays in the leg / feet region. max_w / max_h preserve
+# aspect; bottom anchors at FOOT_LINE_Y.
 SHOES_PLACEMENT: dict[str, dict] = {
-    "wellies":        {"max_w": 440, "max_h": 240, "dx": 0},  # boot tops at body line
-    "trainers":       {"max_w": 500, "max_h": 360, "dx": 0},
-    "sandals":        {"max_w": 440, "max_h": 440, "dx": 0},  # squareish raw
-    "bunny-slippers": {"max_w": 460, "max_h": 420, "dx": 0},
-    "football-boots": {"max_w": 500, "max_h": 340, "dx": 0},
-    "roller-skates":  {"max_w": 500, "max_h": 420, "dx": 0},
-    "cowboy-boots":   {"max_w": 440, "max_h": 400, "dx": 0},
+    "wellies":        {"max_w": 380, "max_h": 320, "dx": 0},
+    "trainers":       {"max_w": 420, "max_h": 320, "dx": 0},
+    "sandals":        {"max_w": 420, "max_h": 320, "dx": 0},
+    "bunny-slippers": {"max_w": 420, "max_h": 320, "dx": 0},
+    "football-boots": {"max_w": 420, "max_h": 320, "dx": 0},
+    "roller-skates":  {"max_w": 420, "max_h": 320, "dx": 0},
+    "cowboy-boots":   {"max_w": 360, "max_h": 320, "dx": 0},
 }
 
 HEADWEAR_PLACEMENT: dict[str, dict] = {

@@ -131,13 +131,17 @@ EYEWEAR = {
     "monocle": ("a single round monocle on a little chain", "monocle"),
 }
 SHOES = {
-    "wellies": ("a pair of bright-yellow rain wellington boots, side by side", "boots"),
-    "trainers": ("a pair of sporty trainers, side by side", "trainers"),
-    "sandals": ("a pair of simple summer sandals, side by side", "sandals"),
-    "bunny-slippers": ("a pair of fluffy bunny slippers, side by side", "slippers"),
-    "football-boots": ("a pair of football boots, side by side", "boots"),
-    "roller-skates": ("a pair of roller skates, side by side", "skates"),
-    "cowboy-boots": ("a pair of cowboy boots, side by side", "boots"),
+    # All shoes are TOP-DOWN with toes pointing toward the viewer — the foot
+    # opening visible at the heel (top of image), toe at the bottom. Two
+    # shoes side by side, symmetrical pair. Reads as 'worn by a frog facing
+    # the camera' rather than 'placed on a shelf side-on'.
+    "wellies":        ("a pair of bright-yellow rain wellington boots seen from above with toes pointing toward the viewer, foot openings visible at the heel, two boots side by side and symmetrical", "boots"),
+    "trainers":       ("a pair of sporty trainers seen from above with toes pointing toward the viewer, laces visible on the tongue, two trainers side by side and symmetrical", "trainers"),
+    "sandals":        ("a pair of simple summer sandals seen from above with toes pointing toward the viewer, straps visible across the top, two sandals side by side and symmetrical", "sandals"),
+    "bunny-slippers": ("a pair of fluffy white bunny slippers seen from above with toes pointing toward the viewer, the bunny ears and faces visible on the toe-fronts, two slippers side by side and symmetrical", "slippers"),
+    "football-boots": ("a pair of football boots seen from above with toes pointing toward the viewer, laces visible on the tongue, two boots side by side and symmetrical", "boots"),
+    "roller-skates":  ("a pair of roller skates seen from above with toes pointing toward the viewer, laces visible on top and a hint of the wheels beneath, two skates side by side and symmetrical", "skates"),
+    "cowboy-boots":   ("a pair of tan cowboy boots seen from above with toes pointing toward the viewer, foot openings visible at the heel, two boots side by side and symmetrical", "boots"),
 }
 ITEMS = {
     "butterfly-net": ("a butterfly-catching net on a wooden stick", "net"),
