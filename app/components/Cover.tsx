@@ -177,6 +177,12 @@ export default function Cover() {
         >
           Play the game &nbsp;&#9656;
         </Link>
+        <Link
+          href="/collection"
+          className="paper-card tilt-l rounded-xl px-4 py-2 text-ink hover:text-sage"
+        >
+          The Collection &nbsp;&#9656;
+        </Link>
       </nav>
     </section>
   );

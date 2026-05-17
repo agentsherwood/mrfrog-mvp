@@ -8,6 +8,8 @@ const links = [
   { href: "/mr-frog", label: "Mr Frog\u2019s world" },
   { href: "/videos", label: "Videos" },
   { href: "/game", label: "Game" },
+  { href: "/collection", label: "Collection" },
+  { href: "/generate", label: "Lab", dev: true },
 ];
 
 export default function PageNav() {
@@ -31,11 +33,16 @@ export default function PageNav() {
                 aria-current={active ? "page" : undefined}
                 className={
                   active
-                    ? "paper-card tilt-r rounded-lg px-3 py-1.5 text-ink"
-                    : "rounded-lg px-3 py-1.5 text-ink-soft hover:text-ink"
+                    ? "paper-card tilt-r flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-ink"
+                    : "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-ink-soft hover:text-ink"
                 }
               >
                 {l.label}
+                {l.dev && (
+                  <span className="rounded bg-sun/70 px-1 text-[0.55rem] font-bold uppercase tracking-wider text-ink">
+                    dev
+                  </span>
+                )}
               </Link>
             );
           })}

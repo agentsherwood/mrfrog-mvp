@@ -1,9 +1,11 @@
 // Mr Frog Collection — manifest generator.
 //
-// Reads app/data/collection-traits.ts and writes the 10,000-frog manifest to
-// public/collection/collection.json. Deterministic: a fixed PRNG seed means
-// frog #N is the same frog on every run. See the trait spec for the model:
-// brain2/Projects/MrFrog/MrFrog-Collection-spec.md
+// Reads app/data/collection-traits.ts and writes the frog manifest to
+// public/collection/collection.json. Deterministic (fixed PRNG seed).
+//
+// The collection is built up a layer at a time: only ACTIVE_CATEGORIES vary
+// between frogs; every other category is pinned to its default ("none" /
+// "matte" / "classic-green"). COLLECTION_SIZE grows with the phases.
 //
 //   npm run collection:gen
 //
@@ -12,19 +14,22 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  ACTIVE_CATEGORIES,
   AMELIA_FROG,
   CATEGORY_BY_ID,
   COLLECTION_SEED,
   COLLECTION_SIZE,
   ROLL_ORDER,
+  STAT_NAMES,
   TIERS,
+  tierCounts,
   tierForRank,
   traitProbability,
 } from "../app/data/collection-traits";
-import type { Frog, FrogTraits } from "../app/lib/collection/types";
+import type { Frog, FrogStats, FrogTraits } from "../app/lib/collection/types";
+import type { StatName, TierKey } from "../app/data/collection-traits";
 
 // --- deterministic PRNG (mulberry32) -------------------------------------
-// Tiny, fast, fully deterministic. Seeded once; consumed in a fixed order.
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -36,7 +41,6 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-// --- weighted pick within a category -------------------------------------
 function pickValue(categoryId: keyof FrogTraits, rng: () => number): string {
   const values = CATEGORY_BY_ID[categoryId].values;
   const total = values.reduce((s, v) => s + v.weight, 0);
@@ -45,65 +49,136 @@ function pickValue(categoryId: keyof FrogTraits, rng: () => number): string {
     roll -= v.weight;
     if (roll < 0) return v.key;
   }
-  return values[values.length - 1].key; // float-safety fallback
+  return values[values.length - 1].key;
 }
+
+/** Default (pinned) value for an inactive category — its first value. */
+function defaultValue(categoryId: keyof FrogTraits): string {
+  return CATEGORY_BY_ID[categoryId].values[0].key;
+}
+
+const isActive = (c: keyof FrogTraits) => ACTIVE_CATEGORIES.includes(c);
 
 function traitKey(traits: FrogTraits): string {
   return ROLL_ORDER.map((c) => traits[c]).join("|");
 }
 
-// --- rarity score: Σ 1/pᵢ across the 7 traits ----------------------------
+// --- rarity score: Σ 1/pᵢ across the ACTIVE traits -----------------------
 function rarityScore(traits: FrogTraits): number {
   let score = 0;
-  for (const category of ROLL_ORDER) {
+  for (const category of ACTIVE_CATEGORIES) {
     const p = traitProbability(category, traits[category]);
     score += p > 0 ? 1 / p : 0;
   }
   return Math.round(score * 100) / 100;
 }
 
+// --- playful stats -------------------------------------------------------
+const TIER_BONUS: Record<TierKey, number> = {
+  "one-of-one": 18,
+  legendary: 14,
+  epic: 10,
+  rare: 6,
+  uncommon: 3,
+  common: 0,
+};
+
+const has = (value: string, set: string[]) => (set.includes(value) ? 1 : 0);
+
+function thematicNudge(stat: StatName, t: FrogTraits): number {
+  switch (stat) {
+    case "hop":
+      return 14 * has(t.shoes, ["trainers", "football-boots", "roller-skates"]) +
+        8 * has(t.outfit, ["strongman"]);
+    case "splash":
+      return 14 * has(t.background, ["pond", "underwater", "rainbow-rain"]) +
+        6 * has(t.outfit, ["raincoat", "sailor"]);
+    case "charm":
+      return 12 * has(t.finish, ["shiny", "foil", "holo", "rainbow"]) +
+        8 * has(t.headwear, ["crown", "flower-crown"]);
+    case "brains":
+      return 14 * has(t.eyewear, ["nerd-glasses", "round-glasses", "monocle"]) +
+        6 * has(t.outfit, ["painter-smock"]);
+    case "luck":
+      return 16 * has(t.finish, ["rainbow"]) +
+        12 * has(t.heldItem, ["golden-acorn", "diamond", "magic-wand"]);
+  }
+}
+
+function computeStats(id: number, traits: FrogTraits, tier: TierKey): FrogStats {
+  const stats = {} as FrogStats;
+  STAT_NAMES.forEach((stat, i) => {
+    const rng = mulberry32(COLLECTION_SEED + id * 131 + i * 977);
+    const base = 25 + Math.floor(rng() * 56);
+    const value = base + TIER_BONUS[tier] + thematicNudge(stat, traits);
+    stats[stat] = Math.max(1, Math.min(100, value));
+  });
+  return stats;
+}
+
 // --- generate ------------------------------------------------------------
+function rollTraits(rng: () => number): FrogTraits {
+  const traits = {} as FrogTraits;
+  for (const category of ROLL_ORDER) {
+    traits[category] = isActive(category)
+      ? pickValue(category, rng)
+      : defaultValue(category);
+  }
+  return traits;
+}
+
+function ameliaTraits(): FrogTraits {
+  const src = AMELIA_FROG.traits as Record<string, string>;
+  const traits = {} as FrogTraits;
+  for (const category of ROLL_ORDER) {
+    traits[category] = isActive(category)
+      ? src[category]
+      : defaultValue(category);
+  }
+  return traits;
+}
+
 function generate(): { frogs: Frog[]; rerolls: number } {
   const rng = mulberry32(COLLECTION_SEED);
   const seen = new Set<string>();
 
-  // The hand-defined 1-of-1 is injected first as id 1.
-  const ameliaTraits = AMELIA_FROG.traits as FrogTraits;
+  const amelia = ameliaTraits();
   const frogs: Frog[] = [
     {
       id: AMELIA_FROG.id,
-      traits: ameliaTraits,
-      rarityScore: rarityScore(ameliaTraits),
+      traits: amelia,
+      stats: {} as FrogStats,
+      rarityScore: rarityScore(amelia),
       rarityRank: 0,
       tier: "common",
       name: AMELIA_FROG.name,
     },
   ];
-  seen.add(traitKey(ameliaTraits));
+  seen.add(traitKey(amelia));
 
   let rerolls = 0;
+  let guard = 0;
   while (frogs.length < COLLECTION_SIZE) {
-    const traits = {} as FrogTraits;
-    for (const category of ROLL_ORDER) {
-      traits[category] = pickValue(category, rng);
+    if (guard++ > COLLECTION_SIZE * 5000) {
+      throw new Error("ran out of unique combinations — too few active traits");
     }
+    const traits = rollTraits(rng);
     const key = traitKey(traits);
     if (seen.has(key)) {
-      rerolls += 1; // collision — re-roll, no id burned
+      rerolls += 1;
       continue;
     }
     seen.add(key);
     frogs.push({
       id: frogs.length + 1,
       traits,
+      stats: {} as FrogStats,
       rarityScore: rarityScore(traits),
       rarityRank: 0,
       tier: "common",
     });
   }
 
-  // Rank by score desc, id asc. Then force Amelia (id 1) to rank 1 so the
-  // 1-of-1 slot always belongs to her, whatever the random rolls produced.
   frogs.sort((a, b) =>
     b.rarityScore !== a.rarityScore
       ? b.rarityScore - a.rarityScore
@@ -111,15 +186,17 @@ function generate(): { frogs: Frog[]; rerolls: number } {
   );
   const ameliaIdx = frogs.findIndex((f) => f.id === AMELIA_FROG.id);
   if (ameliaIdx > 0) {
-    const [amelia] = frogs.splice(ameliaIdx, 1);
-    frogs.unshift(amelia);
+    const [a] = frogs.splice(ameliaIdx, 1);
+    frogs.unshift(a);
   }
   frogs.forEach((frog, i) => {
     frog.rarityRank = i + 1;
-    frog.tier = tierForRank(i + 1);
+    frog.tier = tierForRank(i + 1, COLLECTION_SIZE);
   });
+  for (const frog of frogs) {
+    frog.stats = computeStats(frog.id, frog.traits, frog.tier);
+  }
 
-  // Re-sort to id order for a stable, browseable manifest.
   frogs.sort((a, b) => a.id - b.id);
   return { frogs, rerolls };
 }
@@ -128,20 +205,19 @@ function generate(): { frogs: Frog[]; rerolls: number } {
 function main(): void {
   const { frogs, rerolls } = generate();
 
-  // Validate before writing.
   if (frogs.length !== COLLECTION_SIZE) {
     throw new Error(`Expected ${COLLECTION_SIZE} frogs, got ${frogs.length}`);
   }
   const keys = new Set(frogs.map((f) => traitKey(f.traits)));
   if (keys.size !== COLLECTION_SIZE) {
-    throw new Error(`Duplicate frogs: ${COLLECTION_SIZE - keys.size} collisions slipped through`);
+    throw new Error(`Duplicate frogs: ${COLLECTION_SIZE - keys.size} collisions`);
   }
-  const tierCounts = new Map<string, number>();
-  for (const f of frogs) tierCounts.set(f.tier, (tierCounts.get(f.tier) ?? 0) + 1);
+  const counts = new Map<string, number>();
+  for (const f of frogs) counts.set(f.tier, (counts.get(f.tier) ?? 0) + 1);
+  const expected = tierCounts(COLLECTION_SIZE);
   for (const t of TIERS) {
-    const got = tierCounts.get(t.key) ?? 0;
-    if (got !== t.count) {
-      throw new Error(`Tier ${t.key}: expected ${t.count}, got ${got}`);
+    if ((counts.get(t.key) ?? 0) !== expected[t.key]) {
+      throw new Error(`Tier ${t.key}: expected ${expected[t.key]}, got ${counts.get(t.key) ?? 0}`);
     }
   }
 
@@ -150,17 +226,15 @@ function main(): void {
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, JSON.stringify(frogs));
 
-  // Summary.
-  const scores = frogs.map((f) => f.rarityScore);
   const amelia = frogs.find((f) => f.id === 1)!;
   console.log(`✓ ${frogs.length} unique frogs → public/collection/collection.json`);
+  console.log(`  active traits: ${ACTIVE_CATEGORIES.join(", ")}`);
   console.log(`  dedup re-rolls: ${rerolls}`);
-  console.log(`  rarity score range: ${Math.min(...scores).toFixed(2)} – ${Math.max(...scores).toFixed(2)}`);
   console.log(`  tiers:`);
   for (const t of TIERS) {
-    console.log(`    ${t.label.padEnd(10)} ${tierCounts.get(t.key)}`);
+    console.log(`    ${t.label.padEnd(10)} ${counts.get(t.key)}`);
   }
-  console.log(`  #1 ${amelia.name} — rank ${amelia.rarityRank}, ${amelia.tier}, score ${amelia.rarityScore}`);
+  console.log(`  #1 ${amelia.name} — ${amelia.tier}, stats ${JSON.stringify(amelia.stats)}`);
 }
 
 main();

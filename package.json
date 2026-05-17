@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "collection:gen": "tsx scripts/generate-collection.ts",
-    "collection:layers": "../../../.venv/bin/python3 scripts/gen-placeholder-layers.py"
+    "collection:art": "../../../.venv/bin/python3 scripts/gen-collection-art.py",
+    "collection:layers": "../../../.venv/bin/python3 scripts/build-collection-layers.py"
   },
   "dependencies": {
     "next": "16.2.4",
