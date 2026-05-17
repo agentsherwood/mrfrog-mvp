@@ -254,7 +254,7 @@ export const COLLECTION_SEED = 0x4d724672;
  * first value (none / matte / classic-green). COLLECTION_SIZE grows with the
  * phases — 50 while proving the loop, → 10,000 once every layer is switched on.
  */
-export const ACTIVE_CATEGORIES: TraitCategoryId[] = ["background", "frogColour", "outfit", "headwear"];
+export const ACTIVE_CATEGORIES: TraitCategoryId[] = ["background", "frogColour", "outfit", "headwear", "shoes", "finish"];
 export const COLLECTION_SIZE = 50;
 
 /** The five playful stats every frog carries. */

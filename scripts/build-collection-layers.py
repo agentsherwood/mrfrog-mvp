@@ -27,7 +27,7 @@ OUT = PUBLIC / "collection" / "layers"
 CANVAS = 1024
 
 # --- which layer groups are switched on (incremental build) ----------------
-PHASE = ["background", "frog", "headwear"]
+PHASE = ["background", "frog", "headwear", "shoes"]
 
 # --- canonical anchors (derived from the candidate-1 base plate) -----------
 # The raw canonical PNG fills the canvas right to y=0 — eye bumps touch the
@@ -58,6 +58,26 @@ SHOE_BOX = (250, FROG_TOP_PAD + 680, 776, CANVAS - 8)
 # crescent drawings, with the hat extending UP. Exceptions: headphones
 # wrap around the head with the cups at "ear" level on the sides of the
 # face; the astronaut helmet swallows the whole head.
+# Foot line (canvas y where the shoe sole rests on the ground). The scaled
+# canonical's feet bottom land at canvas y ≈ 1023 — so the sole-to-ground
+# line sits just above that.
+FOOT_LINE_Y = 1018
+
+# Per-piece shoe placement. The frog's two stick feet splay outward and
+# span ~ 500 px at the toe line; values need width room so the shoe pair
+# lands ON the feet rather than between them. max_w / max_h are the
+# largest the trimmed art may be (aspect preserved); shoes anchor with
+# their BOTTOM at FOOT_LINE_Y, centred on the canvas.
+SHOES_PLACEMENT: dict[str, dict] = {
+    "wellies":        {"max_w": 440, "max_h": 240, "dx": 0},  # boot tops at body line
+    "trainers":       {"max_w": 500, "max_h": 360, "dx": 0},
+    "sandals":        {"max_w": 440, "max_h": 440, "dx": 0},  # squareish raw
+    "bunny-slippers": {"max_w": 460, "max_h": 420, "dx": 0},
+    "football-boots": {"max_w": 500, "max_h": 340, "dx": 0},
+    "roller-skates":  {"max_w": 500, "max_h": 420, "dx": 0},
+    "cowboy-boots":   {"max_w": 440, "max_h": 400, "dx": 0},
+}
+
 HEADWEAR_PLACEMENT: dict[str, dict] = {
     "party-hat":        {"max_w": 320, "max_h": 240, "anchor_y":  40, "dx": 0},
     "beanie":           {"max_w": 420, "max_h": 240, "anchor_y":  40, "dx": 0},
@@ -152,6 +172,25 @@ def _make_helmet_bubble_translucent(art: Image.Image) -> Image.Image:
 HEADWEAR_TRIM_TRANSFORMS = {
     "astronaut-helmet": _make_helmet_bubble_translucent,
 }
+
+
+def place_on_feet(src: Path, key: str) -> Image.Image:
+    """Place a shoe-pair so its BOTTOM sits at FOOT_LINE_Y, extending up.
+
+    max_w/max_h are the largest the trimmed art may be (aspect preserved).
+    dx shifts horizontally from canvas centre.
+    """
+    spec = SHOES_PLACEMENT[key]
+    art = trimmed(src)
+    scale = min(spec["max_w"] / art.width, spec["max_h"] / art.height)
+    new_w = max(1, round(art.width * scale))
+    new_h = max(1, round(art.height * scale))
+    art = art.resize((new_w, new_h), Image.LANCZOS)
+    canvas = blank()
+    x = (CANVAS - new_w) // 2 + spec.get("dx", 0)
+    y = FOOT_LINE_Y - new_h
+    canvas.alpha_composite(art, (x, y))
+    return canvas
 
 
 def place_on_head(src: Path, key: str) -> Image.Image:
@@ -260,7 +299,7 @@ def main() -> int:
         for key in SHOES:
             src = RAW / "shoes" / f"{key}.png"
             if src.exists():
-                save(place_in_box(src, SHOE_BOX), "shoes", key)
+                save(place_on_feet(src, key), "shoes", key)
                 built += 1
             else:
                 missing.append(f"shoes/{key}")
