@@ -141,7 +141,6 @@ export const TRAIT_CATEGORIES: TraitCategory[] = [
       { key: "chef-hat", label: "Chef's Hat", weight: 55, layer: headwear("chef-hat"), source: "hungry-pie" },
       { key: "sailor-cap", label: "Sailor Cap", weight: 45, layer: headwear("sailor-cap"), source: "lost-at-sea" },
       { key: "top-hat", label: "Top Hat", weight: 35, layer: headwear("top-hat"), source: "lovely-children" },
-      { key: "headphones", label: "Headphones", weight: 25, layer: headwear("headphones"), source: "table-dancing" },
       { key: "pirate-hat", label: "Pirate Hat", weight: 16, layer: headwear("pirate-hat") },
       { key: "birthday-12", label: "Birthday “12” Hat", weight: 12, layer: headwear("birthday-12") },
       { key: "astronaut-helmet", label: "Astronaut Helmet", weight: 8, layer: headwear("astronaut-helmet"), source: "space-frog" },

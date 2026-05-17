@@ -65,7 +65,6 @@ HEADWEAR_PLACEMENT: dict[str, dict] = {
     "chef-hat":         {"max_w": 360, "max_h": 280, "anchor_y":  40, "dx": 0},
     "sailor-cap":       {"max_w": 460, "max_h": 220, "anchor_y":  70, "dx": 0},
     "top-hat":          {"max_w": 440, "max_h": 300, "anchor_y":  40, "dx": 0},
-    "headphones":       {"max_w": 600, "max_h": 280, "anchor_y":  80, "dx": 0},
     "pirate-hat":       {"max_w": 620, "max_h": 260, "anchor_y":  60, "dx": 0},
     "birthday-12":      {"max_w": 360, "max_h": 280, "anchor_y":  40, "dx": 0},
     "astronaut-helmet": {"max_w": 720, "max_h": 700, "anchor_y": 480, "dx": 0},
@@ -91,7 +90,7 @@ HELD_GENERATED = ["butterfly-net", "barbell", "frog-plush", "magic-wand",
 BACKGROUNDS = ["notebook", "pond", "farmyard", "sunset", "kitchen", "stage",
                "night-sky", "rainbow-rain", "underwater", "outer-space"]
 HEADWEAR = ["party-hat", "beanie", "flower-crown", "chef-hat", "sailor-cap",
-            "top-hat", "headphones", "pirate-hat", "birthday-12",
+            "top-hat", "pirate-hat", "birthday-12",
             "astronaut-helmet", "crown"]
 EYEWEAR = ["round-glasses", "sunglasses", "nerd-glasses", "swim-goggles",
            "heart-glasses", "star-glasses", "monocle"]
@@ -127,6 +126,34 @@ def place_in_box(src: Path, box: tuple[int, int, int, int]) -> Image.Image:
     return canvas
 
 
+def _make_helmet_bubble_translucent(art: Image.Image) -> Image.Image:
+    """Reduce alpha on the top portion of an astronaut-helmet trim so the
+    bubble becomes a glass dome — the frog's face shows through. The
+    collar (bottom portion of the trim) stays opaque.
+    """
+    bb = art.getbbox()
+    if not bb:
+        return art
+    # The bubble is ~ the top 62% of the helmet trim; collar is the rest.
+    split_y = bb[1] + int((bb[3] - bb[1]) * 0.62)
+    bubble = art.crop((0, 0, art.width, split_y))
+    collar = art.crop((0, split_y, art.width, art.height))
+    r, g, b, a = bubble.split()
+    # Drop bubble alpha to ~40% — still tinted, but the face reads through.
+    a = a.point(lambda p: int(p * 0.40))
+    bubble = Image.merge("RGBA", (r, g, b, a))
+    out = Image.new("RGBA", art.size, (0, 0, 0, 0))
+    out.paste(bubble, (0, 0))
+    out.paste(collar, (0, split_y))
+    return out
+
+
+# Headwear pieces that get post-trim alpha tweaks before placement.
+HEADWEAR_TRIM_TRANSFORMS = {
+    "astronaut-helmet": _make_helmet_bubble_translucent,
+}
+
+
 def place_on_head(src: Path, key: str) -> Image.Image:
     """Place a hat by its per-piece spec in HEADWEAR_PLACEMENT.
 
@@ -136,6 +163,9 @@ def place_on_head(src: Path, key: str) -> Image.Image:
     """
     spec = HEADWEAR_PLACEMENT[key]
     art = trimmed(src)
+    transform = HEADWEAR_TRIM_TRANSFORMS.get(key)
+    if transform is not None:
+        art = transform(art)
     scale = min(spec["max_w"] / art.width, spec["max_h"] / art.height)
     new_w = max(1, round(art.width * scale))
     new_h = max(1, round(art.height * scale))
