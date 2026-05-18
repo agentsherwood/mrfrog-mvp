@@ -46,9 +46,12 @@ REF_FROG = REPO / "public" / "character-ref" / "mr-frog" / "happy.png"
 CANVAS = 1024
 FROG_H = 884
 FROG_BOTTOM = 1004
-# Torso mask: the rounded region an outfit is painted into — clear of the
-# eyes (above) and feet (below) so those never move.
-TORSO_MASK_BOX = (250, 312, 778, 754)
+# Torso mask: an ELLIPSE that follows the body silhouette (taller-ish, soft
+# top, soft bottom) so the AI's outfit feathers organically into the body
+# rather than ending at a rectangular boundary. A big blur on top means the
+# transition spans many pixels — no visible suit-meets-skin seams.
+TORSO_MASK_ELLIPSE = (220, 280, 808, 800)
+TORSO_MASK_BLUR = 60
 
 # --- style -----------------------------------------------------------------
 STYLE = (
@@ -192,10 +195,11 @@ def ensure_base_plate() -> tuple[Path, Path]:
     canvas.save(plate)
 
     # Mask: opaque (keep) everywhere, a feathered transparent (edit) torso.
+    # Ellipse + heavy blur for organic, seamless outfit edges.
     m = Image.new("L", (CANVAS, CANVAS), 255)
     hole = Image.new("L", (CANVAS, CANVAS), 255)
-    ImageDraw.Draw(hole).rounded_rectangle(TORSO_MASK_BOX, radius=120, fill=0)
-    hole = hole.filter(ImageFilter.GaussianBlur(26))
+    ImageDraw.Draw(hole).ellipse(TORSO_MASK_ELLIPSE, fill=0)
+    hole = hole.filter(ImageFilter.GaussianBlur(TORSO_MASK_BLUR))
     mask_img = Image.merge("RGBA", (m, m, m, hole))
     mask_img.save(mask)
     print(f"  built base plate + torso mask → {BASE_DIR.relative_to(REPO)}/")
